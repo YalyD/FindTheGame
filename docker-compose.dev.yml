@@ -1,0 +1,57 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/findthegame
+      CLIENT_ORIGIN: http://localhost:5173
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./server/src:/app/src
+      - ./server/tsconfig.json:/app/tsconfig.json
+      - server-node-modules:/app/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_TARGET: http://server:4000
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./client/src:/app/src
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.ts:/app/vite.config.ts
+      - client-node-modules:/app/node_modules
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:
+  server-node-modules:
+  client-node-modules:
