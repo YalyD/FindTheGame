@@ -60,6 +60,16 @@ rideOffersRouter.get('/game/:gameId', requireAuth, async (req: AuthRequest, res:
   res.json(offers)
 })
 
+rideOffersRouter.patch('/:id/cancel', requireAuth, async (req: AuthRequest, res: Response) => {
+  const offer = await RideOffer.findOne({ _id: req.params.id, driver: req.user!.userId })
+  if (!offer) {
+    res.status(404).json({ error: 'ההצעה לא נמצאה' })
+    return
+  }
+  await offer.deleteOne()
+  res.json({ ok: true })
+})
+
 rideOffersRouter.post('/:id/join', requireAuth, async (req: AuthRequest, res: Response) => {
   const { requestId } = req.body as { requestId?: string }
   if (!requestId) {

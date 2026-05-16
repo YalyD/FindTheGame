@@ -42,3 +42,17 @@ rideRequestsRouter.get('/mine', requireAuth, async (req: AuthRequest, res: Respo
     .sort({ createdAt: -1 })
   res.json(requests)
 })
+
+rideRequestsRouter.patch('/:id/cancel', requireAuth, async (req: AuthRequest, res: Response) => {
+  const request = await RideRequest.findOne({ _id: req.params.id, passenger: req.user!.userId })
+  if (!request) {
+    res.status(404).json({ error: 'הבקשה לא נמצאה' })
+    return
+  }
+  if (request.status !== 'open') {
+    res.status(409).json({ error: 'לא ניתן לבטל בקשה שכבר הותאמה' })
+    return
+  }
+  await request.deleteOne()
+  res.json({ ok: true })
+})

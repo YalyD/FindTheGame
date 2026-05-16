@@ -108,7 +108,12 @@ export function Main({ token, name, onLogout }: Props) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [offerGame, setOfferGame] = useState<Game | null>(null)
   const [matchState, setMatchState] = useState<{ gameId: string; requestId: string; seatsNeeded: number } | null>(null)
-  const [view, setView] = useState<'main' | 'activity'>('main')
+  const [view, setView] = useState<'main' | 'activity'>(
+    () => (localStorage.getItem('ftg_view') === 'activity' ? 'activity' : 'main'),
+  )
+  useEffect(() => {
+    localStorage.setItem('ftg_view', view)
+  }, [view])
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {

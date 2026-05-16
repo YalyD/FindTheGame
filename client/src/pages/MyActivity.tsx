@@ -3,6 +3,7 @@ import {
   Avatar,
   AvatarGroup,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -106,8 +107,22 @@ function GameInfo({ game }: { game: Game }) {
   )
 }
 
-function RequestCard({ req }: { req: PopulatedRequest }) {
+function RequestCard({
+  req,
+  onCancel,
+}: {
+  req: PopulatedRequest
+  onCancel: (id: string) => Promise<void>
+}) {
+  const [cancelling, setCancelling] = useState(false)
   const statusInfo = REQUEST_STATUS[req.status]
+
+  async function handleCancel() {
+    setCancelling(true)
+    await onCancel(req._id)
+    setCancelling(false)
+  }
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -116,7 +131,7 @@ function RequestCard({ req }: { req: PopulatedRequest }) {
           <Chip label={statusInfo.label} color={statusInfo.color} size="small" />
         </Stack>
         <Divider sx={{ mb: 1.5 }} />
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
             <LocationOnIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
@@ -125,13 +140,42 @@ function RequestCard({ req }: { req: PopulatedRequest }) {
           </Stack>
           <Chip label={`${req.seatsNeeded} מושבים`} size="small" variant="outlined" />
         </Stack>
+
+        {req.status === 'open' && (
+          <Box sx={{ mt: 1.5 }}>
+            <Button
+              size="small"
+              color="error"
+              variant="outlined"
+              onClick={handleCancel}
+              disabled={cancelling}
+              fullWidth
+            >
+              {cancelling ? 'מבטל...' : 'בטל בקשה'}
+            </Button>
+          </Box>
+        )}
       </CardContent>
     </Card>
   )
 }
 
-function OfferCard({ offer }: { offer: PopulatedOffer }) {
+function OfferCard({
+  offer,
+  onCancel,
+}: {
+  offer: PopulatedOffer
+  onCancel: (id: string) => Promise<void>
+}) {
+  const [cancelling, setCancelling] = useState(false)
   const statusInfo = OFFER_STATUS[offer.status]
+
+  async function handleCancel() {
+    setCancelling(true)
+    await onCancel(offer._id)
+    setCancelling(false)
+  }
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -178,6 +222,21 @@ function OfferCard({ offer }: { offer: PopulatedOffer }) {
             עדיין לא הצטרפו נוסעים
           </Typography>
         )}
+
+        {offer.status === 'open' && (
+          <Box sx={{ mt: 1.5 }}>
+            <Button
+              size="small"
+              color="error"
+              variant="outlined"
+              onClick={handleCancel}
+              disabled={cancelling}
+              fullWidth
+            >
+              {cancelling ? 'מבטל...' : 'בטל הצעה'}
+            </Button>
+          </Box>
+        )}
       </CardContent>
     </Card>
   )
@@ -217,6 +276,16 @@ export function MyActivity({ token }: Props) {
       .finally(() => setLoadingOff(false))
   }, [token])
 
+  async function cancelRequest(id: string) {
+    await axios.patch(`/api/ride-requests/${id}/cancel`, {}, { headers })
+    setRequests((prev) => prev.filter((r) => r._id !== id))
+  }
+
+  async function cancelOffer(id: string) {
+    await axios.patch(`/api/ride-offers/${id}/cancel`, {}, { headers })
+    setOffers((prev) => prev.filter((o) => o._id !== id))
+  }
+
   return (
     <Box>
       <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
@@ -238,7 +307,7 @@ export function MyActivity({ token }: Props) {
             ) : (
               <Stack spacing={2}>
                 {requests.map((req) => (
-                  <RequestCard key={req._id} req={req} />
+                  <RequestCard key={req._id} req={req} onCancel={cancelRequest} />
                 ))}
               </Stack>
             )}
@@ -256,7 +325,7 @@ export function MyActivity({ token }: Props) {
             ) : (
               <Stack spacing={2}>
                 {offers.map((offer) => (
-                  <OfferCard key={offer._id} offer={offer} />
+                  <OfferCard key={offer._id} offer={offer} onCancel={cancelOffer} />
                 ))}
               </Stack>
             )}
