@@ -80,7 +80,14 @@ const OFFER_STATUS: Record<PopulatedOffer['status'], { label: string; color: 'in
   cancelled: { label: 'בוטל', color: 'default' },
 }
 
-function GameInfo({ game }: { game: Game }) {
+function GameInfo({ game }: { game: Game | null }) {
+  if (!game) {
+    return (
+      <Typography variant="body2" color="text.disabled">
+        המשחק נמחק
+      </Typography>
+    )
+  }
   return (
     <Box>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mb: 0.5 }}>
