@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Box,
   Button,
@@ -10,6 +9,8 @@ import {
   Typography,
 } from '@mui/material'
 import axios from 'axios'
+import { useState } from 'react'
+import { AddressFields } from '../components/AddressFields'
 
 const ISRAELI_TEAMS = [
   'מכבי תל אביב',
@@ -43,13 +44,14 @@ export function ProfileCompletion({ token, onComplete }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const currentYear = new Date().getFullYear()
   const isValid =
     favoriteTeam &&
     address.trim() &&
     carMake.trim() &&
     carModel.trim() &&
     Number(carYear) >= 1990 &&
-    Number(carYear) <= new Date().getFullYear() + 1 &&
+    Number(carYear) <= currentYear + 1 &&
     carSeats
 
   async function handleSubmit() {
@@ -82,10 +84,10 @@ export function ProfileCompletion({ token, onComplete }: Props) {
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
+        <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
           השלמת פרופיל
         </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           נדרש למלא פעם אחת לפני שניתן להשתמש באפליקציה
         </Typography>
 
@@ -105,14 +107,7 @@ export function ProfileCompletion({ token, onComplete }: Props) {
             ))}
           </TextField>
 
-          <TextField
-            label="כתובת מגורים"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            fullWidth
-            required
-            placeholder="לדוגמה: רחוב הרצל 5, תל אביב"
-          />
+          <AddressFields onChange={setAddress} />
 
           <Typography variant="subtitle2" color="text.secondary">
             פרטי רכב
@@ -145,7 +140,7 @@ export function ProfileCompletion({ token, onComplete }: Props) {
               type="number"
               fullWidth
               required
-              inputProps={{ min: 1990, max: new Date().getFullYear() + 1 }}
+              slotProps={{ htmlInput: { min: 1990, max: currentYear + 1 } }}
             />
             <TextField
               select
@@ -169,7 +164,7 @@ export function ProfileCompletion({ token, onComplete }: Props) {
             </Typography>
           )}
 
-          <Box display="flex" justifyContent="flex-end">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
               size="large"

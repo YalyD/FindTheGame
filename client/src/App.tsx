@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { ProfileCompletion } from './pages/ProfileCompletion'
+import { Main } from './pages/Main'
 
 interface AuthState {
   token: string
@@ -76,13 +77,7 @@ export function App() {
   }
 
   if (auth) {
-    return (
-      <main style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
-        <h1>Find The Game</h1>
-        <p>Welcome, {auth.name}</p>
-        <button onClick={logout}>Logout</button>
-      </main>
-    )
+    return <Main token={auth.token} name={auth.name} onLogout={logout} />
   }
 
   return (
