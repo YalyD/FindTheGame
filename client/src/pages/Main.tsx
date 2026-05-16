@@ -21,6 +21,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { CreateRideRequest } from './CreateRideRequest'
+import { CreateRideOffer } from './CreateRideOffer'
 
 interface Game {
   _id: string
@@ -49,7 +50,7 @@ function formatDate(dateStr: string) {
   })
 }
 
-function GameCard({ game, onRequestRide }: { game: Game; onRequestRide: (game: Game) => void }) {
+function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestRide: (game: Game) => void; onOfferRide: (game: Game) => void }) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -83,7 +84,7 @@ function GameCard({ game, onRequestRide }: { game: Game; onRequestRide: (game: G
           <Button variant="contained" size="small" fullWidth onClick={() => onRequestRide(game)}>
             צור בקשת נסיעה
           </Button>
-          <Button variant="outlined" size="small" fullWidth>
+          <Button variant="outlined" size="small" fullWidth onClick={() => onOfferRide(game)}>
             הצע נסיעה
           </Button>
         </Stack>
@@ -97,6 +98,7 @@ export function Main({ token, name, onLogout }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
+  const [offerGame, setOfferGame] = useState<Game | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -117,6 +119,20 @@ export function Main({ token, name, onLogout }: Props) {
           setToast('הבקשה נשלחה בהצלחה!')
         }}
         onCancel={() => setSelectedGame(null)}
+      />
+    )
+  }
+
+  if (offerGame) {
+    return (
+      <CreateRideOffer
+        game={offerGame}
+        token={token}
+        onSuccess={() => {
+          setOfferGame(null)
+          setToast('ההצעה פורסמה בהצלחה!')
+        }}
+        onCancel={() => setOfferGame(null)}
       />
     )
   }
@@ -158,7 +174,7 @@ export function Main({ token, name, onLogout }: Props) {
                 <Skeleton key={i} variant="rounded" height={140} />
               ))
             : games.map((game) => (
-                <GameCard key={game._id} game={game} onRequestRide={setSelectedGame} />
+                <GameCard key={game._id} game={game} onRequestRide={setSelectedGame} onOfferRide={setOfferGame} />
               ))}
 
           {!loading && games.length === 0 && !error && (

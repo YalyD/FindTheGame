@@ -5,6 +5,7 @@ import { authRouter } from './routes/auth.js'
 import { usersRouter } from './routes/users.js'
 import { gamesRouter } from './routes/games.js'
 import { rideRequestsRouter } from './routes/rideRequests.js'
+import { rideOffersRouter } from './routes/rideOffers.js'
 
 export function createApp() {
   const app = express()
@@ -22,6 +23,7 @@ export function createApp() {
   app.use('/api/users', usersRouter)
   app.use('/api/games', gamesRouter)
   app.use('/api/ride-requests', rideRequestsRouter)
+  app.use('/api/ride-offers', rideOffersRouter)
 
   return app
 }
