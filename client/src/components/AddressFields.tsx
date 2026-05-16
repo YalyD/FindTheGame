@@ -4,18 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 interface NominatimResult {
   place_id: number
   display_name: string
-  class: string
-  type: string
   address?: {
     city?: string
     town?: string
     village?: string
     hamlet?: string
+    municipality?: string
     road?: string
   }
 }
-
-const CITY_TYPES = ['city', 'town', 'village', 'hamlet', 'municipality']
 
 interface Props {
   onChange: (value: string) => void
@@ -50,10 +47,14 @@ export function AddressFields({ onChange }: Props) {
         const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
         const data: NominatimResult[] = await res.json()
         const cities = data
-          .filter((r) => r.class === 'place' && CITY_TYPES.includes(r.type))
           .map((r) =>
-            r.address?.city ?? r.address?.town ?? r.address?.village ?? r.address?.hamlet ?? r.display_name.split(',')[0].trim(),
+            r.address?.city ??
+            r.address?.municipality ??
+            r.address?.town ??
+            r.address?.village ??
+            r.address?.hamlet,
           )
+          .filter((name): name is string => !!name)
         setCityOptions([...new Set(cities)])
       } catch {
         setCityOptions([])

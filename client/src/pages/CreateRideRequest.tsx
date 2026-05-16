@@ -25,10 +25,15 @@ interface Game {
   city: string
 }
 
+interface CreatedRequest {
+  _id: string
+  seatsNeeded: number
+}
+
 interface Props {
   game: Game
   token: string
-  onSuccess: () => void
+  onSuccess: (req: CreatedRequest) => void
   onCancel: () => void
 }
 
@@ -55,12 +60,12 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
     setLoading(true)
     setError(null)
     try {
-      await axios.post(
+      const res = await axios.post<CreatedRequest>(
         '/api/ride-requests',
         { gameId: game._id, origin, seatsNeeded: Number(seatsNeeded) },
         { headers: { Authorization: `Bearer ${token}` } },
       )
-      onSuccess()
+      onSuccess(res.data)
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {
         setError(err.response.data.error)

@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
+import { MatchScreen } from './MatchScreen'
 
 interface Game {
   _id: string
@@ -99,6 +100,7 @@ export function Main({ token, name, onLogout }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [offerGame, setOfferGame] = useState<Game | null>(null)
+  const [matchState, setMatchState] = useState<{ gameId: string; requestId: string; seatsNeeded: number } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -114,11 +116,26 @@ export function Main({ token, name, onLogout }: Props) {
       <CreateRideRequest
         game={selectedGame}
         token={token}
-        onSuccess={() => {
+        onSuccess={(req) => {
+          setMatchState({ gameId: selectedGame._id, requestId: req._id, seatsNeeded: req.seatsNeeded })
           setSelectedGame(null)
-          setToast('הבקשה נשלחה בהצלחה!')
         }}
         onCancel={() => setSelectedGame(null)}
+      />
+    )
+  }
+
+  if (matchState) {
+    return (
+      <MatchScreen
+        gameId={matchState.gameId}
+        requestId={matchState.requestId}
+        seatsNeeded={matchState.seatsNeeded}
+        token={token}
+        onDone={() => {
+          setMatchState(null)
+          setToast('הבקשה שלך נשמרה!')
+        }}
       />
     )
   }
