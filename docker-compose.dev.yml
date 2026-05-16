@@ -28,6 +28,7 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       VAPID_EMAIL: ${VAPID_EMAIL}
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY}
     volumes:
       - ./server/src:/app/src
       - ./server/tsconfig.json:/app/tsconfig.json
