@@ -52,6 +52,7 @@ services:
       - ./client/public:/app/public
       - ./client/index.html:/app/index.html
       - ./client/vite.config.ts:/app/vite.config.ts
+      - ./client/package.json:/app/package.json
       - client-node-modules:/app/node_modules
     depends_on:
       - server

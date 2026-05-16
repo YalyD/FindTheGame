@@ -164,8 +164,8 @@ export function Main({ token, name, onLogout }: Props) {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <AppBar position="static" elevation={1}>
-        <Toolbar>
+      <AppBar position="static" elevation={1} component="header">
+        <Toolbar dir="ltr">
           <SportsSoccerIcon sx={{ mr: 1 }} />
           <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
             Find The Game
