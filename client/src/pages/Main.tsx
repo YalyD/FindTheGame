@@ -8,21 +8,25 @@ import {
   Chip,
   Container,
   Divider,
+  IconButton,
   Skeleton,
   Snackbar,
   Stack,
   Toolbar,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import LogoutIcon from '@mui/icons-material/Logout'
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
 import { MatchScreen } from './MatchScreen'
+import { MyActivity } from './MyActivity'
 
 interface Game {
   _id: string
@@ -101,6 +105,7 @@ export function Main({ token, name, onLogout }: Props) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [offerGame, setOfferGame] = useState<Game | null>(null)
   const [matchState, setMatchState] = useState<{ gameId: string; requestId: string; seatsNeeded: number } | null>(null)
+  const [view, setView] = useState<'main' | 'activity'>('main')
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -162,6 +167,24 @@ export function Main({ token, name, onLogout }: Props) {
           <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
             Find The Game
           </Typography>
+          <Tooltip title="משחקים קרובים">
+            <IconButton
+              color="inherit"
+              onClick={() => setView('main')}
+              sx={{ opacity: view === 'main' ? 1 : 0.5 }}
+            >
+              <SportsSoccerIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="הפעילות שלי">
+            <IconButton
+              color="inherit"
+              onClick={() => setView('activity')}
+              sx={{ mr: 0.5, opacity: view === 'activity' ? 1 : 0.5 }}
+            >
+              <DirectionsCarIcon />
+            </IconButton>
+          </Tooltip>
           <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'secondary.main', fontSize: 14 }}>
             {name.charAt(0)}
           </Avatar>
@@ -171,6 +194,11 @@ export function Main({ token, name, onLogout }: Props) {
         </Toolbar>
       </AppBar>
 
+      {view === 'activity' ? (
+        <Container maxWidth="sm" sx={{ py: 2 }}>
+          <MyActivity token={token} />
+        </Container>
+      ) : (
       <Container maxWidth="sm" sx={{ py: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
           משחקים קרובים
@@ -201,6 +229,7 @@ export function Main({ token, name, onLogout }: Props) {
           )}
         </Stack>
       </Container>
+      )}
 
       <Snackbar
         open={!!toast}

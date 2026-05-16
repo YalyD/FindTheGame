@@ -40,6 +40,7 @@ rideOffersRouter.post('/', requireAuth, async (req: AuthRequest, res: Response) 
 rideOffersRouter.get('/mine', requireAuth, async (req: AuthRequest, res: Response) => {
   const offers = await RideOffer.find({ driver: req.user!.userId })
     .populate('game')
+    .populate('passengers', 'name picture')
     .sort({ createdAt: -1 })
   res.json(offers)
 })
