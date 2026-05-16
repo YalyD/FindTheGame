@@ -27,6 +27,8 @@ import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
 import { MatchScreen } from './MatchScreen'
 import { MyActivity } from './MyActivity'
+import { NotificationsBell } from '../components/NotificationsBell'
+import { usePushSubscription } from '../hooks/usePushSubscription'
 
 interface Game {
   _id: string
@@ -99,6 +101,7 @@ function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestR
 }
 
 export function Main({ token, name, onLogout }: Props) {
+  usePushSubscription(token)
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -185,6 +188,7 @@ export function Main({ token, name, onLogout }: Props) {
               <DirectionsCarIcon />
             </IconButton>
           </Tooltip>
+          <NotificationsBell token={token} />
           <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'secondary.main', fontSize: 14 }}>
             {name.charAt(0)}
           </Avatar>

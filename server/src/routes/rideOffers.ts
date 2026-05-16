@@ -2,6 +2,10 @@ import { Router, Response } from 'express'
 import { requireAuth, AuthRequest } from '../middleware/requireAuth.js'
 import { RideOffer } from '../models/RideOffer.js'
 import { RideRequest } from '../models/RideRequest.js'
+import { Notification } from '../models/Notification.js'
+import { User } from '../models/User.js'
+import { Game } from '../models/Game.js'
+import { sendPushToUser } from '../lib/webpush.js'
 
 export const rideOffersRouter = Router()
 
@@ -97,6 +101,24 @@ rideOffersRouter.post('/:id/join', requireAuth, async (req: AuthRequest, res: Re
   request.status = 'matched'
   request.matchedOffer = offer._id as typeof request.matchedOffer
   await request.save()
+
+  const [passenger, game] = await Promise.all([
+    User.findById(req.user!.userId, 'name'),
+    Game.findById(offer.game, 'homeTeam awayTeam'),
+  ])
+
+  if (passenger && game) {
+    const msg = `${passenger.name} הצטרף להצעת הנסיעה שלך למשחק ${game.homeTeam} נגד ${game.awayTeam}`
+    await Notification.create({
+      recipient: offer.driver,
+      message: msg,
+      relatedOffer: offer._id,
+    })
+    sendPushToUser(offer.driver.toString(), {
+      title: 'Find The Game',
+      body: msg,
+    }).catch(() => {})
+  }
 
   res.json({ offer, request })
 })

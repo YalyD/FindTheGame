@@ -1,11 +1,13 @@
 import 'dotenv/config'
 import { createApp } from './app'
 import { connectDb } from './db'
+import { initWebPush } from './lib/webpush.js'
 
 const PORT = Number(process.env.PORT) || 4000
 
 async function main() {
   await connectDb()
+  initWebPush()
   const app = createApp()
   app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`)

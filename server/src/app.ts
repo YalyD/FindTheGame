@@ -6,6 +6,8 @@ import { usersRouter } from './routes/users.js'
 import { gamesRouter } from './routes/games.js'
 import { rideRequestsRouter } from './routes/rideRequests.js'
 import { rideOffersRouter } from './routes/rideOffers.js'
+import { notificationsRouter } from './routes/notifications.js'
+import { pushRouter } from './routes/push.js'
 
 export function createApp() {
   const app = express()
@@ -24,6 +26,8 @@ export function createApp() {
   app.use('/api/games', gamesRouter)
   app.use('/api/ride-requests', rideRequestsRouter)
   app.use('/api/ride-offers', rideOffersRouter)
+  app.use('/api/notifications', notificationsRouter)
+  app.use('/api/push', pushRouter)
 
   return app
 }

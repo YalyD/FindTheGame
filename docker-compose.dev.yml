@@ -25,9 +25,13 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       JWT_SECRET: ${JWT_SECRET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_EMAIL: ${VAPID_EMAIL}
     volumes:
       - ./server/src:/app/src
       - ./server/tsconfig.json:/app/tsconfig.json
+      - ./server/package.json:/app/package.json
       - server-node-modules:/app/node_modules
     depends_on:
       mongo:
@@ -45,6 +49,7 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ./client/src:/app/src
+      - ./client/public:/app/public
       - ./client/index.html:/app/index.html
       - ./client/vite.config.ts:/app/vite.config.ts
       - client-node-modules:/app/node_modules
