@@ -131,7 +131,7 @@ function RequestCard({
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+    <Card>
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
           <GameInfo game={req.game} />
@@ -184,7 +184,7 @@ function OfferCard({
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+    <Card>
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
           <GameInfo game={offer.game} />

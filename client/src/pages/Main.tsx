@@ -59,7 +59,7 @@ function formatDate(dateStr: string) {
 
 function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestRide: (game: Game) => void; onOfferRide: (game: Game) => void }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+    <Card>
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Box>
@@ -168,8 +168,15 @@ export function Main({ token, name, onLogout }: Props) {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <AppBar position="static" elevation={1} component="header">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background:
+          'linear-gradient(180deg, #fff8ee 0%, #fff3d6 100%)',
+        position: 'relative',
+      }}
+    >
+      <AppBar position="sticky" component="header">
         <Toolbar dir="ltr">
           <SportsSoccerIcon sx={{ mr: 1 }} />
           <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
@@ -194,7 +201,18 @@ export function Main({ token, name, onLogout }: Props) {
             </IconButton>
           </Tooltip>
           <NotificationsBell token={token} />
-          <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'secondary.main', fontSize: 14 }}>
+          <Avatar
+            sx={{
+              width: 34,
+              height: 34,
+              mr: 1,
+              bgcolor: 'rgba(255,255,255,0.22)',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 700,
+              border: '2px solid rgba(255,255,255,0.55)',
+            }}
+          >
             {name.charAt(0)}
           </Avatar>
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={onLogout} size="small">
@@ -209,10 +227,21 @@ export function Main({ token, name, onLogout }: Props) {
         </Container>
       ) : (
       <Container maxWidth="sm" sx={{ py: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 800,
+            mb: 0.5,
+            background: 'linear-gradient(135deg, #ef6c00 0%, #f9a825 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            display: 'inline-block',
+          }}
+        >
           משחקים קרובים
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
           בחר משחק כדי למצוא או להציע נסיעה
         </Typography>
 

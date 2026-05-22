@@ -84,7 +84,7 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
           בקשת נסיעה
         </Typography>
 
-        <Box sx={{ bgcolor: '#e8f0fe', borderRadius: 2, p: 2, mb: 3, border: '1px solid #90caf9' }}>
+        <Box sx={{ bgcolor: '#fff8e1', borderRadius: 2, p: 2, mb: 3, border: '1px solid #ffe082' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
             <SportsSoccerIcon color="primary" fontSize="small" />
             <Typography sx={{ fontWeight: 700 }}>

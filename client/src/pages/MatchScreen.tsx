@@ -59,12 +59,15 @@ function OfferCard({
 
   return (
     <Card
-      variant="outlined"
-      sx={{
-        borderRadius: 2,
-        borderColor: isBest ? 'primary.main' : undefined,
-        borderWidth: isBest ? 2 : 1,
-      }}
+      sx={
+        isBest
+          ? {
+              border: '2px solid',
+              borderColor: 'primary.main',
+              boxShadow: '0 10px 24px -10px rgba(239, 108, 0, 0.3)',
+            }
+          : undefined
+      }
     >
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
@@ -162,7 +165,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
         </Typography>
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        הבקשה שלך נשלחה — בחר הצעת נסיעה מתאימה
+        הבקשה שלך נשמרה ✓ — בחר הצעת נסיעה מתאימה למטה
       </Typography>
 
       {error && (
@@ -178,8 +181,13 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
           ))}
         </Stack>
       ) : offers.length === 0 ? (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          אין הצעות נסיעה זמינות למשחק זה כרגע. ננסה להתאים לך נסיעה כשתתווסף הצעה חדשה.
+        <Alert severity="success" sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+            הבקשה שלך פעילה
+          </Typography>
+          <Typography variant="body2">
+            עדיין אין הצעות נסיעה למשחק הזה. נשלח לך התראה ברגע שנהג יפרסם הצעה — אפשר לסגור את המסך בשקט.
+          </Typography>
         </Alert>
       ) : (
         <Stack spacing={2}>
@@ -222,8 +230,13 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
         </Stack>
       )}
 
-      <Button variant="text" fullWidth sx={{ mt: 3 }} onClick={onDone}>
-        {joinedId ? 'חזור למסך הראשי' : 'המשך ללא בחירת נסיעה'}
+      <Button
+        variant={joinedId ? 'contained' : 'text'}
+        fullWidth
+        sx={{ mt: 3 }}
+        onClick={onDone}
+      >
+        חזור למסך הראשי
       </Button>
     </Container>
   )
