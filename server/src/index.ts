@@ -1,16 +1,19 @@
 import 'dotenv/config'
-import { createApp } from './app'
-import { connectDb } from './db'
-import { initWebPush } from './lib/webpush.js'
+import { loadEnv } from './lib/env.js'
 
-const PORT = Number(process.env.PORT) || 4000
+// Validate env BEFORE any other module (especially routes) reads process.env.
+const env = loadEnv()
+
+const { createApp } = await import('./app.js')
+const { connectDb } = await import('./db.js')
+const { initWebPush } = await import('./lib/webpush.js')
 
 async function main() {
   await connectDb()
   initWebPush()
   const app = createApp()
-  app.listen(PORT, () => {
-    console.log(`Server listening on http://localhost:${PORT}`)
+  app.listen(env.PORT, () => {
+    console.log(`Server listening on http://localhost:${env.PORT}`)
   })
 }
 

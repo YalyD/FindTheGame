@@ -1,9 +1,10 @@
 import webpush from 'web-push'
 import mongoose from 'mongoose'
+import { env } from './env.js'
 import { PushSubscription } from '../models/PushSubscription.js'
 
 export function initWebPush() {
-  const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL } = process.env
+  const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL } = env()
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_EMAIL) return
   webpush.setVapidDetails(`mailto:${VAPID_EMAIL}`, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 }
