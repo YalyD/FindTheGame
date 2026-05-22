@@ -17,7 +17,7 @@ const rideOfferSchema = new Schema<IRideOffer>(
     game: { type: Schema.Types.ObjectId, ref: 'Game', required: true },
     driver: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     origin: { type: String, required: true },
-    seatsAvailable: { type: Number, required: true, min: 1, max: 6 },
+    seatsAvailable: { type: Number, required: true, min: 0, max: 6 },
     passengers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     status: { type: String, enum: ['open', 'full', 'cancelled'], default: 'open' },
   },

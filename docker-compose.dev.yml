@@ -31,7 +31,9 @@ services:
       RAPIDAPI_KEY: ${RAPIDAPI_KEY}
     volumes:
       - ./server/src:/app/src
+      - ./server/test:/app/test
       - ./server/tsconfig.json:/app/tsconfig.json
+      - ./server/vitest.config.ts:/app/vitest.config.ts
       - ./server/package.json:/app/package.json
       - server-node-modules:/app/node_modules
     depends_on:

@@ -10,7 +10,11 @@ import { HttpError } from '../middleware/errorHandler.js'
 
 export const authRouter = Router()
 
-const googleClient = new OAuth2Client(env().GOOGLE_CLIENT_ID)
+let _googleClient: OAuth2Client | null = null
+function googleClient(): OAuth2Client {
+  if (!_googleClient) _googleClient = new OAuth2Client(env().GOOGLE_CLIENT_ID)
+  return _googleClient
+}
 
 const googleBody = z.object({
   credential: z.string().min(20).max(4096),
@@ -25,7 +29,7 @@ authRouter.post(
 
     let payload
     try {
-      const ticket = await googleClient.verifyIdToken({
+      const ticket = await googleClient().verifyIdToken({
         idToken: credential,
         audience: env().GOOGLE_CLIENT_ID,
       })
