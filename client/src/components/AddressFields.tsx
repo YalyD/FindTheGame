@@ -1,4 +1,5 @@
-import { Autocomplete, Stack, TextField } from '@mui/material'
+import { Autocomplete, Box, IconButton, Stack, TextField, Tooltip } from '@mui/material'
+import MyLocationIcon from '@mui/icons-material/MyLocation'
 import { useEffect, useRef, useState } from 'react'
 
 interface NominatimResult {
@@ -11,28 +12,57 @@ interface NominatimResult {
     hamlet?: string
     municipality?: string
     road?: string
+    house_number?: string
   }
 }
 
 interface Props {
   onChange: (value: string) => void
+  initialValue?: string
 }
 
-export function AddressFields({ onChange }: Props) {
-  const [city, setCity] = useState('')
-  const [street, setStreet] = useState('')
-  const [houseNumber, setHouseNumber] = useState('')
+// Parse "Street House, City" back into the three structured fields.
+// Tolerant — returns whatever it can recover.
+function parseAddress(stored: string): { city: string; street: string; houseNumber: string } {
+  const empty = { city: '', street: '', houseNumber: '' }
+  if (!stored) return empty
+  const parts = stored.split(',')
+  if (parts.length < 2) return empty
+  const city = parts.slice(1).join(',').trim()
+  const streetAndHouse = parts[0].trim()
+  // House number is the trailing whitespace-separated token if it looks numeric.
+  const m = streetAndHouse.match(/^(.*?)\s+(\d+[\wא-ת]*)$/)
+  if (m) return { city, street: m[1].trim(), houseNumber: m[2].trim() }
+  return { city, street: streetAndHouse, houseNumber: '' }
+}
 
-  const [cityInput, setCityInput] = useState('')
+export function AddressFields({ onChange, initialValue }: Props) {
+  const initial = useRef(parseAddress(initialValue ?? '')).current
+  const [city, setCity] = useState(initial.city)
+  const [street, setStreet] = useState(initial.street)
+  const [houseNumber, setHouseNumber] = useState(initial.houseNumber)
+
+  const [cityInput, setCityInput] = useState(initial.city)
   const [cityOptions, setCityOptions] = useState<string[]>([])
   const [cityLoading, setCityLoading] = useState(false)
 
-  const [streetInput, setStreetInput] = useState('')
+  const [streetInput, setStreetInput] = useState(initial.street)
   const [streetOptions, setStreetOptions] = useState<string[]>([])
   const [streetLoading, setStreetLoading] = useState(false)
 
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState<string | null>(null)
+
   const cityDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const streetDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // If the parent ever supplies a non-empty initialValue, propagate it once on mount.
+  useEffect(() => {
+    if (initial.city && initial.street && initial.houseNumber) {
+      onChange(`${initial.street} ${initial.houseNumber}, ${initial.city}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (cityInput.length < 2) {
@@ -97,36 +127,110 @@ export function AddressFields({ onChange }: Props) {
     }
   }
 
+  async function useCurrentLocation() {
+    setGeoError(null)
+    if (!('geolocation' in navigator)) {
+      setGeoError('הדפדפן לא תומך באיתור מיקום')
+      return
+    }
+    setGeoLoading(true)
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        })
+      })
+      const { latitude, longitude } = pos.coords
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+      const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
+      if (!res.ok) throw new Error('reverse geocode failed')
+      const data: NominatimResult = await res.json()
+      const a = data.address
+      const newCity =
+        a?.city ?? a?.municipality ?? a?.town ?? a?.village ?? a?.hamlet ?? ''
+      const newStreet = a?.road ?? ''
+      const newHouse = a?.house_number ?? ''
+      if (!newCity) {
+        setGeoError('לא הצלחנו לזהות את הכתובת מהמיקום')
+        return
+      }
+      setCity(newCity)
+      setCityInput(newCity)
+      setStreet(newStreet)
+      setStreetInput(newStreet)
+      setHouseNumber(newHouse)
+      update(newCity, newStreet, newHouse)
+    } catch (err: unknown) {
+      const e = err as GeolocationPositionError
+      if (e?.code === 1) setGeoError('יש לאפשר גישה למיקום בדפדפן')
+      else if (e?.code === 3) setGeoError('פעולת המיקום פגה')
+      else setGeoError('שגיאה באיתור המיקום')
+    } finally {
+      setGeoLoading(false)
+    }
+  }
+
   return (
     <Stack spacing={2}>
-      <Autocomplete
-        options={cityOptions}
-        loading={cityLoading}
-        loadingText="מחפש ישובים..."
-        noOptionsText={cityInput.length < 2 ? 'הקלד לפחות 2 תווים' : 'לא נמצאו ישובים'}
-        value={city || null}
-        inputValue={cityInput}
-        onInputChange={(_e, val, reason) => {
-          setCityInput(val)
-          if (reason === 'clear') {
-            setCity('')
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+        <Autocomplete
+          sx={{ flexGrow: 1 }}
+          options={cityOptions}
+          loading={cityLoading}
+          loadingText="מחפש ישובים..."
+          noOptionsText={cityInput.length < 2 ? 'הקלד לפחות 2 תווים' : 'לא נמצאו ישובים'}
+          value={city || null}
+          inputValue={cityInput}
+          onInputChange={(_e, val, reason) => {
+            setCityInput(val)
+            if (reason === 'clear') {
+              setCity('')
+              setStreet('')
+              setStreetInput('')
+              update('', '', houseNumber)
+            }
+          }}
+          onChange={(_e, val) => {
+            const selected = val ?? ''
+            setCity(selected)
             setStreet('')
             setStreetInput('')
-            update('', '', houseNumber)
-          }
-        }}
-        onChange={(_e, val) => {
-          const selected = val ?? ''
-          setCity(selected)
-          setStreet('')
-          setStreetInput('')
-          update(selected, '', houseNumber)
-        }}
-        filterOptions={(x) => x}
-        renderInput={(params) => (
-          <TextField {...params} label="עיר / ישוב" required />
-        )}
-      />
+            update(selected, '', houseNumber)
+          }}
+          filterOptions={(x) => x}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="עיר / ישוב"
+              required
+              error={!!geoError}
+              helperText={geoError ?? undefined}
+            />
+          )}
+        />
+        <Tooltip title="השתמש במיקום הנוכחי שלי">
+          <span>
+            <IconButton
+              onClick={useCurrentLocation}
+              disabled={geoLoading}
+              color="primary"
+              sx={{ mt: 1, bgcolor: 'rgba(239, 108, 0, 0.08)', '&:hover': { bgcolor: 'rgba(239, 108, 0, 0.16)' } }}
+            >
+              <MyLocationIcon
+                sx={{
+                  animation: geoLoading ? 'ftg-spin 0.8s linear infinite' : 'none',
+                  '@keyframes ftg-spin': {
+                    from: { transform: 'rotate(0deg)' },
+                    to: { transform: 'rotate(360deg)' },
+                  },
+                }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
 
       <Stack direction="row" spacing={2}>
         <Autocomplete
@@ -168,6 +272,7 @@ export function AddressFields({ onChange }: Props) {
           sx={{ width: 120 }}
         />
       </Stack>
+      <Box sx={{ display: 'none' }}>{/* spacer */}</Box>
     </Stack>
   )
 }

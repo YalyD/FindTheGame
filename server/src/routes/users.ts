@@ -9,6 +9,19 @@ import { HttpError } from '../middleware/errorHandler.js'
 
 export const usersRouter = Router()
 
+usersRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
+  const user = await User.findById(req.user!.userId, 'name email picture favoriteTeam address car')
+  if (!user) throw new HttpError(404, 'user_not_found')
+  res.json({
+    name: user.name,
+    email: user.email,
+    picture: user.picture,
+    favoriteTeam: user.favoriteTeam ?? '',
+    address: user.address ?? '',
+    car: user.car ?? null,
+  })
+})
+
 const currentYear = new Date().getFullYear()
 
 const profileBody = z.object({

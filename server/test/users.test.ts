@@ -7,6 +7,22 @@ import { makeUser, makeIncompleteUser } from './helpers.js'
 
 const app = createApp()
 
+describe('GET /api/users/me', () => {
+  it('returns the caller profile snapshot', async () => {
+    const u = await makeUser({ name: 'Snapshot Test' })
+    const res = await request(app).get('/api/users/me').set(u.authHeader)
+    expect(res.status).toBe(200)
+    expect(res.body.name).toBe('Snapshot Test')
+    expect(res.body.favoriteTeam).toBe('מכבי תל אביב')
+    expect(res.body.car).toMatchObject({ make: 'Toyota', model: 'Corolla' })
+  })
+
+  it('rejects unauthenticated', async () => {
+    const res = await request(app).get('/api/users/me')
+    expect(res.status).toBe(401)
+  })
+})
+
 describe('PATCH /api/users/me', () => {
   it('completes a profile and returns a new JWT with profileComplete=true', async () => {
     const u = await makeIncompleteUser()

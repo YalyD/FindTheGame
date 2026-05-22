@@ -96,7 +96,14 @@ export function App() {
   }
 
   if (auth) {
-    return <Main token={auth.token} name={auth.name} onLogout={logout} />
+    return (
+      <Main
+        token={auth.token}
+        name={auth.name}
+        onLogout={logout}
+        onProfileUpdated={handleProfileComplete}
+      />
+    )
   }
 
   return (

@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 import axios from 'axios'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AddressFields } from '../components/AddressFields'
 
 const ISRAELI_TEAMS = [
@@ -31,20 +31,46 @@ const ISRAELI_TEAMS = [
 
 const SEAT_OPTIONS = [2, 3, 4, 5, 6, 7]
 
+interface InitialProfile {
+  favoriteTeam: string
+  address: string
+  car: { make: string; model: string; year: number; seats: number } | null
+}
+
 interface Props {
   token: string
   onComplete: (newToken: string) => void
+  mode?: 'create' | 'edit'
+  initialProfile?: InitialProfile | null
+  onCancel?: () => void
 }
 
-export function ProfileCompletion({ token, onComplete }: Props) {
-  const [favoriteTeam, setFavoriteTeam] = useState('')
-  const [address, setAddress] = useState('')
-  const [carMake, setCarMake] = useState('')
-  const [carModel, setCarModel] = useState('')
-  const [carYear, setCarYear] = useState('')
-  const [carSeats, setCarSeats] = useState('')
+export function ProfileCompletion({
+  token,
+  onComplete,
+  mode = 'create',
+  initialProfile,
+  onCancel,
+}: Props) {
+  const [favoriteTeam, setFavoriteTeam] = useState(initialProfile?.favoriteTeam ?? '')
+  const [address, setAddress] = useState(initialProfile?.address ?? '')
+  const [carMake, setCarMake] = useState(initialProfile?.car?.make ?? '')
+  const [carModel, setCarModel] = useState(initialProfile?.car?.model ?? '')
+  const [carYear, setCarYear] = useState(initialProfile?.car?.year?.toString() ?? '')
+  const [carSeats, setCarSeats] = useState(initialProfile?.car?.seats?.toString() ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  // Re-sync if initialProfile arrives after mount (parent fetches it async).
+  useEffect(() => {
+    if (!initialProfile) return
+    setFavoriteTeam(initialProfile.favoriteTeam ?? '')
+    setAddress(initialProfile.address ?? '')
+    setCarMake(initialProfile.car?.make ?? '')
+    setCarModel(initialProfile.car?.model ?? '')
+    setCarYear(initialProfile.car?.year?.toString() ?? '')
+    setCarSeats(initialProfile.car?.seats?.toString() ?? '')
+  }, [initialProfile])
 
   const currentYear = new Date().getFullYear()
   const isValid =
@@ -83,14 +109,18 @@ export function ProfileCompletion({ token, onComplete }: Props) {
     }
   }
 
+  const isEdit = mode === 'edit'
+
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
-          השלמת פרופיל
+          {isEdit ? 'עריכת פרופיל' : 'השלמת פרופיל'}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          נדרש למלא פעם אחת לפני שניתן להשתמש באפליקציה
+          {isEdit
+            ? 'עדכן את פרטי הפרופיל שלך'
+            : 'נדרש למלא פעם אחת לפני שניתן להשתמש באפליקציה'}
         </Typography>
 
         <Stack spacing={3}>
@@ -109,7 +139,7 @@ export function ProfileCompletion({ token, onComplete }: Props) {
             ))}
           </TextField>
 
-          <AddressFields onChange={setAddress} />
+          <AddressFields onChange={setAddress} initialValue={initialProfile?.address} />
 
           <Typography variant="subtitle2" color="text.secondary">
             פרטי רכב
@@ -166,14 +196,19 @@ export function ProfileCompletion({ token, onComplete }: Props) {
             </Typography>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {isEdit && onCancel && (
+              <Button variant="outlined" onClick={onCancel} disabled={loading}>
+                ביטול
+              </Button>
+            )}
             <Button
               variant="contained"
               size="large"
               onClick={handleSubmit}
               disabled={!isValid || loading}
             >
-              {loading ? 'שומר…' : 'שמור והמשך'}
+              {loading ? 'שומר…' : isEdit ? 'שמור שינויים' : 'שמור והמשך'}
             </Button>
           </Box>
         </Stack>

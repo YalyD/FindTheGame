@@ -22,12 +22,15 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import LogoutIcon from '@mui/icons-material/Logout'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import EditIcon from '@mui/icons-material/Edit'
+import { Menu, MenuItem } from '@mui/material'
 import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
 import { MatchScreen } from './MatchScreen'
 import { MyActivity } from './MyActivity'
+import { ProfileCompletion } from './ProfileCompletion'
 import { NotificationsBell } from '../components/NotificationsBell'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 
@@ -45,6 +48,13 @@ interface Props {
   token: string
   name: string
   onLogout: () => void
+  onProfileUpdated: (newToken: string) => void
+}
+
+interface ProfileSnapshot {
+  favoriteTeam: string
+  address: string
+  car: { make: string; model: string; year: number; seats: number } | null
 }
 
 function formatDate(dateStr: string) {
@@ -101,7 +111,7 @@ function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestR
   )
 }
 
-export function Main({ token, name, onLogout }: Props) {
+export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
   usePushSubscription(token)
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
@@ -117,6 +127,20 @@ export function Main({ token, name, onLogout }: Props) {
     localStorage.setItem('ftg_view', view)
   }, [view])
   const [toast, setToast] = useState<string | null>(null)
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
+  const [editingProfile, setEditingProfile] = useState<ProfileSnapshot | null>(null)
+
+  async function openProfileEdit() {
+    setMenuAnchor(null)
+    try {
+      const res = await axios.get<ProfileSnapshot>('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setEditingProfile(res.data)
+    } catch {
+      setToast('שגיאה בטעינת הפרופיל')
+    }
+  }
 
   const loadGames = useCallback(
     async (mode: 'initial' | 'refresh') => {
@@ -184,6 +208,22 @@ export function Main({ token, name, onLogout }: Props) {
     )
   }
 
+  if (editingProfile) {
+    return (
+      <ProfileCompletion
+        token={token}
+        mode="edit"
+        initialProfile={editingProfile}
+        onComplete={(newToken) => {
+          onProfileUpdated(newToken)
+          setEditingProfile(null)
+          setToast('הפרופיל עודכן בהצלחה')
+        }}
+        onCancel={() => setEditingProfile(null)}
+      />
+    )
+  }
+
   return (
     <Box
       sx={{
@@ -218,23 +258,43 @@ export function Main({ token, name, onLogout }: Props) {
             </IconButton>
           </Tooltip>
           <NotificationsBell token={token} />
-          <Avatar
-            sx={{
-              width: 34,
-              height: 34,
-              mr: 1,
-              bgcolor: 'rgba(255,255,255,0.22)',
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 700,
-              border: '2px solid rgba(255,255,255,0.55)',
-            }}
+          <Tooltip title="חשבון">
+            <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} size="small" sx={{ mr: 0.5 }}>
+              <Avatar
+                sx={{
+                  width: 34,
+                  height: 34,
+                  bgcolor: 'rgba(255,255,255,0.22)',
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  border: '2px solid rgba(255,255,255,0.55)',
+                }}
+              >
+                {name.charAt(0)}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={menuAnchor}
+            open={!!menuAnchor}
+            onClose={() => setMenuAnchor(null)}
+            slotProps={{ paper: { sx: { minWidth: 180 } } }}
           >
-            {name.charAt(0)}
-          </Avatar>
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={onLogout} size="small">
-            יציאה
-          </Button>
+            <MenuItem onClick={openProfileEdit}>
+              <EditIcon fontSize="small" sx={{ mr: 1.5 }} />
+              עריכת פרופיל
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setMenuAnchor(null)
+                onLogout()
+              }}
+            >
+              <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+              יציאה
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
