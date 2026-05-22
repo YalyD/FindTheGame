@@ -21,7 +21,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import LogoutIcon from '@mui/icons-material/Logout'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
-import { useEffect, useState } from 'react'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
@@ -104,6 +105,7 @@ export function Main({ token, name, onLogout }: Props) {
   usePushSubscription(token)
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [offerGame, setOfferGame] = useState<Game | null>(null)
@@ -116,13 +118,28 @@ export function Main({ token, name, onLogout }: Props) {
   }, [view])
   const [toast, setToast] = useState<string | null>(null)
 
+  const loadGames = useCallback(
+    async (mode: 'initial' | 'refresh') => {
+      if (mode === 'refresh') setRefreshing(true)
+      setError(null)
+      try {
+        const res = await axios.get<Game[]>('/api/games', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setGames(res.data)
+      } catch {
+        setError('שגיאה בטעינת המשחקים')
+      } finally {
+        if (mode === 'initial') setLoading(false)
+        else setRefreshing(false)
+      }
+    },
+    [token],
+  )
+
   useEffect(() => {
-    axios
-      .get<Game[]>('/api/games', { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setGames(res.data))
-      .catch(() => setError('שגיאה בטעינת המשחקים'))
-      .finally(() => setLoading(false))
-  }, [token])
+    loadGames('initial')
+  }, [loadGames])
 
   if (selectedGame) {
     return (
@@ -227,20 +244,46 @@ export function Main({ token, name, onLogout }: Props) {
         </Container>
       ) : (
       <Container maxWidth="sm" sx={{ py: 3 }}>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 800,
-            mb: 0.5,
-            background: 'linear-gradient(135deg, #ef6c00 0%, #f9a825 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            display: 'inline-block',
-          }}
-        >
-          משחקים קרובים
-        </Typography>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #ef6c00 0%, #f9a825 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              display: 'inline-block',
+            }}
+          >
+            משחקים קרובים
+          </Typography>
+          <Tooltip title="רענן רשימה">
+            <span>
+              <IconButton
+                size="small"
+                onClick={() => loadGames('refresh')}
+                disabled={loading || refreshing}
+                sx={{
+                  color: 'primary.main',
+                  bgcolor: 'rgba(239, 108, 0, 0.08)',
+                  '&:hover': { bgcolor: 'rgba(239, 108, 0, 0.16)' },
+                }}
+              >
+                <RefreshIcon
+                  fontSize="small"
+                  sx={{
+                    animation: refreshing ? 'ftg-spin 0.8s linear infinite' : 'none',
+                    '@keyframes ftg-spin': {
+                      from: { transform: 'rotate(0deg)' },
+                      to: { transform: 'rotate(360deg)' },
+                    },
+                  }}
+                />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
           בחר משחק כדי למצוא או להציע נסיעה
         </Typography>
