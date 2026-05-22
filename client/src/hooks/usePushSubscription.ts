@@ -22,7 +22,10 @@ export function usePushSubscription(token: string) {
         const existing = await reg.pushManager.getSubscription()
         const sub =
           existing ??
-          (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey }))
+          (await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey as BufferSource,
+          }))
 
         await axios.post('/api/push/subscribe', sub.toJSON(), {
           headers: { Authorization: `Bearer ${token}` },
