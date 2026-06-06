@@ -13,6 +13,7 @@ import SportsSoccerIcon from '@mui/icons-material/SportsSoccer'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { ProfileCompletion } from './pages/ProfileCompletion'
 import { Main } from './pages/Main'
+import { BRAND_NAME, LOGIN } from './constants'
 
 interface AuthState {
   token: string
@@ -39,7 +40,7 @@ export function App() {
 
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
     if (!clientId) {
-      setError('VITE_GOOGLE_CLIENT_ID is not set')
+      setError(LOGIN.errorNoClientId)
       return
     }
 
@@ -53,7 +54,7 @@ export function App() {
             setAuth(res.data)
             setError(null)
           } catch {
-            setError('Login failed — check server logs')
+            setError(LOGIN.errorLoginFailed)
           }
         },
       })
@@ -205,10 +206,10 @@ export function App() {
                 backgroundClip: 'text',
               }}
             >
-              Find The Game
+              {BRAND_NAME}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280 }}>
-              טרמפים למשחק. ביחד זה יותר כיף.
+              {LOGIN.tagline}
             </Typography>
           </Stack>
 
@@ -225,7 +226,7 @@ export function App() {
                 sx={{ display: 'block', mx: 'auto', mb: 0.5, color: '#ef6c00', fontSize: 24 }}
               />
               <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, color: '#b53d00' }}>
-                מצא טרמפים
+                {LOGIN.featureFindRides}
               </Typography>
             </Box>
             <Box sx={{ flex: '0 0 auto', minWidth: 96, textAlign: 'center' }}>
@@ -233,7 +234,7 @@ export function App() {
                 sx={{ display: 'block', mx: 'auto', mb: 0.5, color: '#f9a825', fontSize: 24 }}
               />
               <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, color: '#a06600' }}>
-                הצע נסיעות
+                {LOGIN.featureOfferRides}
               </Typography>
             </Box>
           </Box>
@@ -262,7 +263,7 @@ export function App() {
             color="text.secondary"
             sx={{ display: 'block', mt: 2.5, opacity: 0.75 }}
           >
-            התחברות מאובטחת דרך חשבון Google
+            {LOGIN.secureLogin}
           </Typography>
         </Paper>
       </Container>

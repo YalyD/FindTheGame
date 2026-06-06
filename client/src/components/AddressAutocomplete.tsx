@@ -1,5 +1,6 @@
 import { Autocomplete, TextField } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
+import { ADDRESS_AUTOCOMPLETE } from '../constants'
 
 interface NominatimResult {
   place_id: number
@@ -46,8 +47,8 @@ export function AddressAutocomplete({ label, value, onChange, placeholder, helpe
     <Autocomplete
       options={options}
       loading={loading}
-      loadingText="מחפש כתובות..."
-      noOptionsText={inputValue.length < 3 ? 'הקלד לפחות 3 תווים' : 'לא נמצאו תוצאות'}
+      loadingText={ADDRESS_AUTOCOMPLETE.loading}
+      noOptionsText={inputValue.length < 3 ? ADDRESS_AUTOCOMPLETE.minChars : ADDRESS_AUTOCOMPLETE.noResults}
       value={value || null}
       inputValue={inputValue}
       onInputChange={(_e, val, reason) => {

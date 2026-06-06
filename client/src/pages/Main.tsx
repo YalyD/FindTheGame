@@ -33,6 +33,7 @@ import { MyActivity } from './MyActivity'
 import { ProfileCompletion } from './ProfileCompletion'
 import { NotificationsBell } from '../components/NotificationsBell'
 import { usePushSubscription } from '../hooks/usePushSubscription'
+import { BRAND_NAME, COMMON, MAIN } from '../constants'
 
 interface Game {
   _id: string
@@ -78,7 +79,7 @@ function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestR
               {game.homeTeam}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              נגד {game.awayTeam}
+              {COMMON.versus} {game.awayTeam}
             </Typography>
             <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
               <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
@@ -100,10 +101,10 @@ function GameCard({ game, onRequestRide, onOfferRide }: { game: Game; onRequestR
         <Divider sx={{ my: 1.5 }} />
         <Stack direction="row" spacing={1}>
           <Button variant="contained" size="small" fullWidth onClick={() => onRequestRide(game)}>
-            צור בקשת נסיעה
+            {MAIN.requestRide}
           </Button>
           <Button variant="outlined" size="small" fullWidth onClick={() => onOfferRide(game)}>
-            הצע נסיעה
+            {MAIN.offerRide}
           </Button>
         </Stack>
       </CardContent>
@@ -138,7 +139,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
       })
       setEditingProfile(res.data)
     } catch {
-      setToast('שגיאה בטעינת הפרופיל')
+      setToast(MAIN.errorLoadProfile)
     }
   }
 
@@ -152,7 +153,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         })
         setGames(res.data)
       } catch {
-        setError('שגיאה בטעינת המשחקים')
+        setError(MAIN.errorLoadGames)
       } finally {
         if (mode === 'initial') setLoading(false)
         else setRefreshing(false)
@@ -188,7 +189,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         token={token}
         onDone={() => {
           setMatchState(null)
-          setToast('הבקשה שלך נשמרה!')
+          setToast(MAIN.toastRequestSaved)
         }}
       />
     )
@@ -201,7 +202,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         token={token}
         onSuccess={() => {
           setOfferGame(null)
-          setToast('ההצעה פורסמה בהצלחה!')
+          setToast(MAIN.toastOfferPublished)
         }}
         onCancel={() => setOfferGame(null)}
       />
@@ -217,7 +218,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         onComplete={(newToken) => {
           onProfileUpdated(newToken)
           setEditingProfile(null)
-          setToast('הפרופיל עודכן בהצלחה')
+          setToast(MAIN.toastProfileUpdated)
         }}
         onCancel={() => setEditingProfile(null)}
       />
@@ -237,9 +238,9 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         <Toolbar dir="ltr">
           <SportsSoccerIcon sx={{ mr: 1 }} />
           <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
-            Find The Game
+            {BRAND_NAME}
           </Typography>
-          <Tooltip title="משחקים קרובים">
+          <Tooltip title={MAIN.navUpcoming}>
             <IconButton
               color="inherit"
               onClick={() => setView('main')}
@@ -248,7 +249,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
               <SportsSoccerIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="הפעילות שלי">
+          <Tooltip title={MAIN.navActivity}>
             <IconButton
               color="inherit"
               onClick={() => setView('activity')}
@@ -258,7 +259,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
             </IconButton>
           </Tooltip>
           <NotificationsBell token={token} />
-          <Tooltip title="חשבון">
+          <Tooltip title={MAIN.account}>
             <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} size="small" sx={{ mr: 0.5 }}>
               <Avatar
                 sx={{
@@ -283,7 +284,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
           >
             <MenuItem onClick={openProfileEdit}>
               <EditIcon fontSize="small" sx={{ mr: 1.5 }} />
-              עריכת פרופיל
+              {MAIN.editProfile}
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -292,7 +293,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
               }}
             >
               <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
-              יציאה
+              {MAIN.logout}
             </MenuItem>
           </Menu>
         </Toolbar>
@@ -316,9 +317,9 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
               display: 'inline-block',
             }}
           >
-            משחקים קרובים
+            {MAIN.upcomingGames}
           </Typography>
-          <Tooltip title="רענן רשימה">
+          <Tooltip title={MAIN.refreshList}>
             <span>
               <IconButton
                 size="small"
@@ -345,7 +346,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
           </Tooltip>
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-          בחר משחק כדי למצוא או להציע נסיעה
+          {MAIN.pickGame}
         </Typography>
 
         {error && (
@@ -365,7 +366,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
 
           {!loading && games.length === 0 && !error && (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              אין משחקים קרובים
+              {MAIN.noGames}
             </Typography>
           )}
         </Stack>

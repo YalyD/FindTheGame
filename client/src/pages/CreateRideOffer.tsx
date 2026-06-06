@@ -16,6 +16,7 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useState } from 'react'
 import axios from 'axios'
 import { AddressFields } from '../components/AddressFields'
+import { COMMON, CREATE_OFFER } from '../constants'
 
 interface Game {
   _id: string
@@ -66,7 +67,7 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {
         setError(err.response.data.error)
       } else {
-        setError('שגיאה ביצירת ההצעה, נסה שוב')
+        setError(CREATE_OFFER.error)
       }
     } finally {
       setLoading(false)
@@ -79,7 +80,7 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
           <DirectionsCarIcon color="primary" />
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            הצעת נסיעה
+            {CREATE_OFFER.heading}
           </Typography>
         </Stack>
 
@@ -87,7 +88,7 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
             <SportsSoccerIcon color="primary" fontSize="small" />
             <Typography sx={{ fontWeight: 700 }}>
-              {game.homeTeam} נגד {game.awayTeam}
+              {game.homeTeam} {COMMON.versus} {game.awayTeam}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
@@ -109,19 +110,19 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
         <Stack spacing={3}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              נקודת מוצא
+              {CREATE_OFFER.origin}
             </Typography>
             <AddressFields onChange={setOrigin} />
           </Box>
 
           <TextField
             select
-            label="כמה מושבים פנויים?"
+            label={CREATE_OFFER.seatsAvailable}
             value={seatsAvailable}
             onChange={(e) => setSeatsAvailable(e.target.value)}
             fullWidth
             required
-            helperText="לא כולל את המושב שלך"
+            helperText={CREATE_OFFER.seatsHelper}
           >
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <MenuItem key={n} value={n}>
@@ -138,10 +139,10 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
 
           <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
             <Button variant="outlined" onClick={onCancel} disabled={loading}>
-              ביטול
+              {COMMON.cancel}
             </Button>
             <Button variant="contained" onClick={handleSubmit} disabled={!isValid || loading}>
-              {loading ? 'שולח…' : 'פרסם הצעה'}
+              {loading ? CREATE_OFFER.submitting : CREATE_OFFER.submit}
             </Button>
           </Stack>
         </Stack>

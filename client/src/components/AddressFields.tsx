@@ -1,6 +1,7 @@
 import { Autocomplete, Box, IconButton, Stack, TextField, Tooltip } from '@mui/material'
 import MyLocationIcon from '@mui/icons-material/MyLocation'
 import { useEffect, useRef, useState } from 'react'
+import { ADDRESS_FIELDS } from '../constants'
 
 interface NominatimResult {
   place_id: number
@@ -130,7 +131,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
   async function useCurrentLocation() {
     setGeoError(null)
     if (!('geolocation' in navigator)) {
-      setGeoError('הדפדפן לא תומך באיתור מיקום')
+      setGeoError(ADDRESS_FIELDS.geoUnsupported)
       return
     }
     setGeoLoading(true)
@@ -153,7 +154,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
       const newStreet = a?.road ?? ''
       const newHouse = a?.house_number ?? ''
       if (!newCity) {
-        setGeoError('לא הצלחנו לזהות את הכתובת מהמיקום')
+        setGeoError(ADDRESS_FIELDS.geoNoAddress)
         return
       }
       setCity(newCity)
@@ -164,9 +165,9 @@ export function AddressFields({ onChange, initialValue }: Props) {
       update(newCity, newStreet, newHouse)
     } catch (err: unknown) {
       const e = err as GeolocationPositionError
-      if (e?.code === 1) setGeoError('יש לאפשר גישה למיקום בדפדפן')
-      else if (e?.code === 3) setGeoError('פעולת המיקום פגה')
-      else setGeoError('שגיאה באיתור המיקום')
+      if (e?.code === 1) setGeoError(ADDRESS_FIELDS.geoDenied)
+      else if (e?.code === 3) setGeoError(ADDRESS_FIELDS.geoTimeout)
+      else setGeoError(ADDRESS_FIELDS.geoError)
     } finally {
       setGeoLoading(false)
     }
@@ -179,8 +180,8 @@ export function AddressFields({ onChange, initialValue }: Props) {
           sx={{ flexGrow: 1 }}
           options={cityOptions}
           loading={cityLoading}
-          loadingText="מחפש ישובים..."
-          noOptionsText={cityInput.length < 2 ? 'הקלד לפחות 2 תווים' : 'לא נמצאו ישובים'}
+          loadingText={ADDRESS_FIELDS.cityLoading}
+          noOptionsText={cityInput.length < 2 ? ADDRESS_FIELDS.cityMinChars : ADDRESS_FIELDS.cityNoResults}
           value={city || null}
           inputValue={cityInput}
           onInputChange={(_e, val, reason) => {
@@ -203,19 +204,19 @@ export function AddressFields({ onChange, initialValue }: Props) {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="עיר / ישוב"
+              label={ADDRESS_FIELDS.cityLabel}
               required
               error={!!geoError}
               helperText={geoError ?? undefined}
             />
           )}
         />
-        <Tooltip title="השתמש במיקום הנוכחי שלי">
+        <Tooltip title={ADDRESS_FIELDS.useMyLocation}>
           <span>
             <IconButton
               onClick={useCurrentLocation}
               disabled={geoLoading}
-              aria-label="השתמש במיקום הנוכחי שלי"
+              aria-label={ADDRESS_FIELDS.useMyLocation}
               color="primary"
               sx={{ mt: 1, bgcolor: 'rgba(239, 108, 0, 0.08)', '&:hover': { bgcolor: 'rgba(239, 108, 0, 0.16)' } }}
             >
@@ -238,8 +239,8 @@ export function AddressFields({ onChange, initialValue }: Props) {
           sx={{ flexGrow: 1 }}
           options={streetOptions}
           loading={streetLoading}
-          loadingText="מחפש רחובות..."
-          noOptionsText={!city ? 'בחר עיר תחילה' : streetInput.length < 2 ? 'הקלד לפחות 2 תווים' : 'לא נמצאו רחובות'}
+          loadingText={ADDRESS_FIELDS.streetLoading}
+          noOptionsText={!city ? ADDRESS_FIELDS.streetSelectCityFirst : streetInput.length < 2 ? ADDRESS_FIELDS.streetMinChars : ADDRESS_FIELDS.streetNoResults}
           disabled={!city}
           value={street || null}
           inputValue={streetInput}
@@ -257,19 +258,19 @@ export function AddressFields({ onChange, initialValue }: Props) {
           }}
           filterOptions={(x) => x}
           renderInput={(params) => (
-            <TextField {...params} label="רחוב" required />
+            <TextField {...params} label={ADDRESS_FIELDS.streetLabel} required />
           )}
         />
 
         <TextField
-          label='מס" בית'
+          label={ADDRESS_FIELDS.houseNumber}
           value={houseNumber}
           onChange={(e) => {
             setHouseNumber(e.target.value)
             update(city, street, e.target.value)
           }}
           required
-          placeholder="5"
+          placeholder={ADDRESS_FIELDS.houseNumberPlaceholder}
           sx={{ width: 120 }}
         />
       </Stack>

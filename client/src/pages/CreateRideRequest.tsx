@@ -15,6 +15,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { useState } from 'react'
 import axios from 'axios'
 import { AddressFields } from '../components/AddressFields'
+import { COMMON, CREATE_REQUEST } from '../constants'
 
 interface Game {
   _id: string
@@ -70,7 +71,7 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {
         setError(err.response.data.error)
       } else {
-        setError('שגיאה ביצירת הבקשה, נסה שוב')
+        setError(CREATE_REQUEST.error)
       }
     } finally {
       setLoading(false)
@@ -81,14 +82,14 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
-          בקשת נסיעה
+          {CREATE_REQUEST.heading}
         </Typography>
 
         <Box sx={{ bgcolor: '#fff8e1', borderRadius: 2, p: 2, mb: 3, border: '1px solid #ffe082' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
             <SportsSoccerIcon color="primary" fontSize="small" />
             <Typography sx={{ fontWeight: 700 }}>
-              {game.homeTeam} נגד {game.awayTeam}
+              {game.homeTeam} {COMMON.versus} {game.awayTeam}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
@@ -112,7 +113,7 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
 
           <TextField
             select
-            label="כמה מושבים דרושים?"
+            label={CREATE_REQUEST.seatsNeeded}
             value={seatsNeeded}
             onChange={(e) => setSeatsNeeded(e.target.value)}
             fullWidth
@@ -133,10 +134,10 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
 
           <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
             <Button variant="outlined" onClick={onCancel} disabled={loading}>
-              ביטול
+              {COMMON.cancel}
             </Button>
             <Button variant="contained" onClick={handleSubmit} disabled={!isValid || loading}>
-              {loading ? 'שולח…' : 'שלח בקשה'}
+              {loading ? CREATE_REQUEST.submitting : CREATE_REQUEST.submit}
             </Button>
           </Stack>
         </Stack>

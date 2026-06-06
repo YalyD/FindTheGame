@@ -11,23 +11,7 @@ import {
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { AddressFields } from '../components/AddressFields'
-
-const ISRAELI_TEAMS = [
-  'מכבי תל אביב',
-  'הפועל תל אביב',
-  'מכבי חיפה',
-  'הפועל חיפה',
-  'בית"ר ירושלים',
-  'הפועל ירושלים',
-  'הפועל באר שבע',
-  'הפועל פתח תקווה',
-  'בני סכנין',
-  'עירוני קריית שמונה',
-  'מ.ס. אשדוד',
-  'מכבי בני ריינה',
-  'מכבי נתניה',
-  'עירוני טבריה',
-]
+import { ISRAELI_TEAMS, PROFILE, COMMON } from '../constants'
 
 const SEAT_OPTIONS = [2, 3, 4, 5, 6, 7]
 
@@ -103,7 +87,7 @@ export function ProfileCompletion({
       )
       onComplete(res.data.token)
     } catch {
-      setError('שגיאה בשמירת הפרופיל, נסה שוב')
+      setError(PROFILE.error)
     } finally {
       setLoading(false)
     }
@@ -115,18 +99,16 @@ export function ProfileCompletion({
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
-          {isEdit ? 'עריכת פרופיל' : 'השלמת פרופיל'}
+          {isEdit ? PROFILE.headingEdit : PROFILE.headingCreate}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          {isEdit
-            ? 'עדכן את פרטי הפרופיל שלך'
-            : 'נדרש למלא פעם אחת לפני שניתן להשתמש באפליקציה'}
+          {isEdit ? PROFILE.subtitleEdit : PROFILE.subtitleCreate}
         </Typography>
 
         <Stack spacing={3}>
           <TextField
             select
-            label="קבוצה אהובה"
+            label={PROFILE.favoriteTeam}
             value={favoriteTeam}
             onChange={(e) => setFavoriteTeam(e.target.value)}
             fullWidth
@@ -142,31 +124,31 @@ export function ProfileCompletion({
           <AddressFields onChange={setAddress} initialValue={initialProfile?.address} />
 
           <Typography variant="subtitle2" color="text.secondary">
-            פרטי רכב
+            {PROFILE.carDetails}
           </Typography>
 
           <Stack direction="row" spacing={2}>
             <TextField
-              label="יצרן"
+              label={PROFILE.make}
               value={carMake}
               onChange={(e) => setCarMake(e.target.value)}
               fullWidth
               required
-              placeholder="טויוטה"
+              placeholder={PROFILE.makePlaceholder}
             />
             <TextField
-              label="דגם"
+              label={PROFILE.model}
               value={carModel}
               onChange={(e) => setCarModel(e.target.value)}
               fullWidth
               required
-              placeholder="קורולה"
+              placeholder={PROFILE.modelPlaceholder}
             />
           </Stack>
 
           <Stack direction="row" spacing={2}>
             <TextField
-              label="שנת ייצור"
+              label={PROFILE.year}
               value={carYear}
               onChange={(e) => setCarYear(e.target.value)}
               type="number"
@@ -176,7 +158,7 @@ export function ProfileCompletion({
             />
             <TextField
               select
-              label="מספר מושבים"
+              label={PROFILE.seats}
               value={carSeats}
               onChange={(e) => setCarSeats(e.target.value)}
               fullWidth
@@ -199,7 +181,7 @@ export function ProfileCompletion({
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             {isEdit && onCancel && (
               <Button variant="outlined" onClick={onCancel} disabled={loading}>
-                ביטול
+                {COMMON.cancel}
               </Button>
             )}
             <Button
@@ -208,7 +190,7 @@ export function ProfileCompletion({
               onClick={handleSubmit}
               disabled={!isValid || loading}
             >
-              {loading ? 'שומר…' : isEdit ? 'שמור שינויים' : 'שמור והמשך'}
+              {loading ? PROFILE.saving : isEdit ? PROFILE.saveChanges : PROFILE.saveContinue}
             </Button>
           </Box>
         </Stack>

@@ -15,6 +15,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { NOTIFICATIONS } from '../constants'
 
 interface INotification {
   _id: string
@@ -30,11 +31,11 @@ interface Props {
 export function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'עכשיו'
-  if (mins < 60) return `לפני ${mins} דקות`
+  if (mins < 1) return NOTIFICATIONS.timeNow
+  if (mins < 60) return NOTIFICATIONS.timeMinutes(mins)
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `לפני ${hours} שעות`
-  return `לפני ${Math.floor(hours / 24)} ימים`
+  if (hours < 24) return NOTIFICATIONS.timeHours(hours)
+  return NOTIFICATIONS.timeDays(Math.floor(hours / 24))
 }
 
 export function NotificationsBell({ token }: Props) {
@@ -72,7 +73,7 @@ export function NotificationsBell({ token }: Props) {
 
   return (
     <>
-      <Tooltip title="התראות">
+      <Tooltip title={NOTIFICATIONS.title}>
         <IconButton color="inherit" onClick={handleOpen} sx={{ mr: 0.5 }}>
           <Badge badgeContent={unreadCount} color="error">
             <NotificationsIcon />
@@ -98,7 +99,7 @@ export function NotificationsBell({ token }: Props) {
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              התראות
+              {NOTIFICATIONS.title}
             </Typography>
             {notifications.length > 0 && (
               <Button
@@ -108,7 +109,7 @@ export function NotificationsBell({ token }: Props) {
                   queryClient.invalidateQueries({ queryKey: ['notifications'] })
                 }}
               >
-                סמן הכל כנקרא
+                {NOTIFICATIONS.markAllRead}
               </Button>
             )}
           </Box>
@@ -116,7 +117,7 @@ export function NotificationsBell({ token }: Props) {
 
           {notifications.length === 0 ? (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4, px: 2 }}>
-              אין התראות
+              {NOTIFICATIONS.empty}
             </Typography>
           ) : (
             <List disablePadding sx={{ maxHeight: 360, overflow: 'auto' }}>

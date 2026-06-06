@@ -18,6 +18,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import StarIcon from '@mui/icons-material/Star'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { COMMON, MATCH } from '../constants'
 
 interface Driver {
   _id: string
@@ -79,7 +80,7 @@ function OfferCard({
             <Typography sx={{ fontWeight: 600 }}>{offer.driver.name}</Typography>
           </Box>
           <Chip
-            label={`${offer.seatsAvailable} מושבים`}
+            label={COMMON.seats(offer.seatsAvailable)}
             size="small"
             color={hasEnough ? 'success' : 'warning'}
             variant="outlined"
@@ -97,7 +98,7 @@ function OfferCard({
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <CheckCircleIcon color="success" fontSize="small" />
             <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-              הצטרפת להצעה זו!
+              {MATCH.joined}
             </Typography>
           </Stack>
         ) : (
@@ -107,7 +108,7 @@ function OfferCard({
             disabled={!hasEnough || joining}
             onClick={() => onJoin(offer._id)}
           >
-            {joining ? 'מצטרף…' : hasEnough ? 'הצטרף להצעה' : 'אין מספיק מושבים'}
+            {joining ? MATCH.joining : hasEnough ? MATCH.join : MATCH.notEnoughSeats}
           </Button>
         )}
       </CardContent>
@@ -128,7 +129,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setOffers(res.data))
-      .catch(() => setError('שגיאה בטעינת ההצעות'))
+      .catch(() => setError(MATCH.errorLoadOffers))
       .finally(() => setLoading(false))
   }, [gameId, token])
 
@@ -146,7 +147,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
       if (axios.isAxiosError(err) && err.response?.data?.error) {
         setError(err.response.data.error)
       } else {
-        setError('שגיאה בהצטרפות להצעה')
+        setError(MATCH.errorJoin)
       }
     } finally {
       setJoiningId(null)
@@ -161,11 +162,11 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
         <DirectionsCarIcon color="primary" />
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          הצעות נסיעה
+          {MATCH.heading}
         </Typography>
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        הבקשה שלך נשמרה ✓ — בחר הצעת נסיעה מתאימה למטה
+        {MATCH.subtitle}
       </Typography>
 
       {error && (
@@ -183,10 +184,10 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
       ) : offers.length === 0 ? (
         <Alert severity="success" sx={{ mb: 2 }}>
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-            הבקשה שלך פעילה
+            {MATCH.activeTitle}
           </Typography>
           <Typography variant="body2">
-            עדיין אין הצעות נסיעה למשחק הזה. נשלח לך התראה ברגע שנהג יפרסם הצעה — אפשר לסגור את המסך בשקט.
+            {MATCH.activeBody}
           </Typography>
         </Alert>
       ) : (
@@ -194,7 +195,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
           {bestOffer && (
             <>
               <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 700 }}>
-                ההצעה המומלצת עבורך
+                {MATCH.recommended}
               </Typography>
               <OfferCard
                 offer={bestOffer}
@@ -211,7 +212,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
             <>
               <Divider sx={{ my: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  כל ההצעות הזמינות
+                  {MATCH.allOffers}
                 </Typography>
               </Divider>
               {otherOffers.map((offer) => (
@@ -236,7 +237,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
         sx={{ mt: 3 }}
         onClick={onDone}
       >
-        חזור למסך הראשי
+        {MATCH.backToMain}
       </Button>
     </Container>
   )

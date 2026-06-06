@@ -21,6 +21,7 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { ACTIVITY, COMMON } from '../constants'
 
 interface Game {
   _id: string
@@ -69,22 +70,22 @@ function formatDate(dateStr: string) {
 }
 
 const REQUEST_STATUS: Record<PopulatedRequest['status'], { label: string; color: 'info' | 'success' | 'default' }> = {
-  open: { label: 'ממתין להתאמה', color: 'info' },
-  matched: { label: 'נמצאה נסיעה!', color: 'success' },
-  cancelled: { label: 'בוטל', color: 'default' },
+  open: { label: ACTIVITY.requestStatus.open, color: 'info' },
+  matched: { label: ACTIVITY.requestStatus.matched, color: 'success' },
+  cancelled: { label: ACTIVITY.requestStatus.cancelled, color: 'default' },
 }
 
 const OFFER_STATUS: Record<PopulatedOffer['status'], { label: string; color: 'info' | 'warning' | 'default' }> = {
-  open: { label: 'פתוח', color: 'info' },
-  full: { label: 'מלא', color: 'warning' },
-  cancelled: { label: 'בוטל', color: 'default' },
+  open: { label: ACTIVITY.offerStatus.open, color: 'info' },
+  full: { label: ACTIVITY.offerStatus.full, color: 'warning' },
+  cancelled: { label: ACTIVITY.offerStatus.cancelled, color: 'default' },
 }
 
 function GameInfo({ game }: { game: Game | null }) {
   if (!game) {
     return (
       <Typography variant="body2" color="text.disabled">
-        המשחק נמחק
+        {ACTIVITY.gameDeleted}
       </Typography>
     )
   }
@@ -93,7 +94,7 @@ function GameInfo({ game }: { game: Game | null }) {
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mb: 0.5 }}>
         <SportsSoccerIcon fontSize="small" color="primary" />
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
-          {game.homeTeam} נגד {game.awayTeam}
+          {game.homeTeam} {COMMON.versus} {game.awayTeam}
         </Typography>
       </Stack>
       <Stack direction="row" spacing={1}>
@@ -145,7 +146,7 @@ function RequestCard({
               {req.origin}
             </Typography>
           </Stack>
-          <Chip label={`${req.seatsNeeded} מושבים`} size="small" variant="outlined" />
+          <Chip label={COMMON.seats(req.seatsNeeded)} size="small" variant="outlined" />
         </Stack>
 
         {req.status === 'open' && (
@@ -158,7 +159,7 @@ function RequestCard({
               disabled={cancelling}
               fullWidth
             >
-              {cancelling ? 'מבטל...' : 'בטל בקשה'}
+              {cancelling ? ACTIVITY.cancelling : ACTIVITY.cancelRequest}
             </Button>
           </Box>
         )}
@@ -200,7 +201,7 @@ function OfferCard({
           </Stack>
           <Chip
             icon={<DirectionsCarIcon />}
-            label={`${offer.seatsAvailable} מושבים פנויים`}
+            label={ACTIVITY.seatsAvailable(offer.seatsAvailable)}
             size="small"
             variant="outlined"
             color={offer.seatsAvailable > 0 ? 'success' : 'warning'}
@@ -210,7 +211,7 @@ function OfferCard({
         {offer.passengers.length > 0 && (
           <Box sx={{ mt: 1.5 }}>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-              נוסעים שהצטרפו:
+              {ACTIVITY.passengersJoined}
             </Typography>
             <AvatarGroup max={5} sx={{ justifyContent: 'flex-start' }}>
               {offer.passengers.map((p) => (
@@ -226,7 +227,7 @@ function OfferCard({
 
         {offer.passengers.length === 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-            עדיין לא הצטרפו נוסעים
+            {ACTIVITY.noPassengers}
           </Typography>
         )}
 
@@ -240,7 +241,7 @@ function OfferCard({
               disabled={cancelling}
               fullWidth
             >
-              {cancelling ? 'מבטל...' : 'בטל הצעה'}
+              {cancelling ? ACTIVITY.cancelling : ACTIVITY.cancelOffer}
             </Button>
           </Box>
         )}
@@ -273,13 +274,13 @@ export function MyActivity({ token }: Props) {
     axios
       .get<PopulatedRequest[]>('/api/ride-requests/mine', { headers })
       .then((res) => setRequests(res.data))
-      .catch(() => setError('שגיאה בטעינת הבקשות'))
+      .catch(() => setError(ACTIVITY.errorLoadRequests))
       .finally(() => setLoadingReq(false))
 
     axios
       .get<PopulatedOffer[]>('/api/ride-offers/mine', { headers })
       .then((res) => setOffers(res.data))
-      .catch(() => setError('שגיאה בטעינת ההצעות'))
+      .catch(() => setError(ACTIVITY.errorLoadOffers))
       .finally(() => setLoadingOff(false))
   }, [token])
 
@@ -296,8 +297,8 @@ export function MyActivity({ token }: Props) {
   return (
     <Box>
       <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth">
-        <Tab label={`הבקשות שלי (${requests.length})`} />
-        <Tab label={`ההצעות שלי (${offers.length})`} />
+        <Tab label={ACTIVITY.myRequestsTab(requests.length)} />
+        <Tab label={ACTIVITY.myOffersTab(offers.length)} />
       </Tabs>
 
       <Box sx={{ p: 2 }}>
@@ -309,7 +310,7 @@ export function MyActivity({ token }: Props) {
               <LoadingCards />
             ) : requests.length === 0 ? (
               <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                לא יצרת בקשות נסיעה עדיין
+                {ACTIVITY.noRequests}
               </Typography>
             ) : (
               <Stack spacing={2}>
@@ -327,7 +328,7 @@ export function MyActivity({ token }: Props) {
               <LoadingCards />
             ) : offers.length === 0 ? (
               <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                לא יצרת הצעות נסיעה עדיין
+                {ACTIVITY.noOffers}
               </Typography>
             ) : (
               <Stack spacing={2}>
