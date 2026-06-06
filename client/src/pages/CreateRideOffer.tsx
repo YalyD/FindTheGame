@@ -9,39 +9,19 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useState } from 'react'
 import axios from 'axios'
-import { AddressFields } from '../components/AddressFields'
+import { AddressFields } from '../components/address/AddressFields'
+import { GameSummary } from '../components/game/GameSummary'
 import { COMMON, CREATE_OFFER } from '../constants'
-
-interface Game {
-  _id: string
-  homeTeam: string
-  awayTeam: string
-  date: string
-  stadium: string
-  city: string
-}
+import type { Game } from '../types'
 
 interface Props {
   game: Game
   token: string
   onSuccess: () => void
   onCancel: () => void
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
@@ -84,26 +64,7 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
           </Typography>
         </Stack>
 
-        <Box sx={{ bgcolor: '#fff8e1', borderRadius: 2, p: 2, mb: 3, border: '1px solid #ffe082' }}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
-            <SportsSoccerIcon color="primary" fontSize="small" />
-            <Typography sx={{ fontWeight: 700 }}>
-              {game.homeTeam} {COMMON.versus} {game.awayTeam}
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
-            <CalendarMonthIcon color="action" fontSize="small" />
-            <Typography variant="body2" color="text.secondary">
-              {formatDate(game.date)}
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <LocationOnIcon color="action" fontSize="small" />
-            <Typography variant="body2" color="text.secondary">
-              {game.stadium}, {game.city}
-            </Typography>
-          </Stack>
-        </Box>
+        <GameSummary game={game} />
 
         <Divider sx={{ mb: 3 }} />
 

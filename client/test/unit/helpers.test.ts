@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parseAddress } from '../../src/components/AddressFields'
+import { parseAddress } from '../../src/components/address/AddressFields'
 import { urlBase64ToUint8Array } from '../../src/hooks/usePushSubscription'
-import { timeAgo } from '../../src/components/NotificationsBell'
+import { timeAgo } from '../../src/components/notifications/NotificationsBell'
 
 describe('parseAddress', () => {
   it('returns empty fields for an empty string', () => {

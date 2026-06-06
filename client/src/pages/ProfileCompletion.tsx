@@ -10,10 +10,9 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { AddressFields } from '../components/AddressFields'
+import { AddressFields } from '../components/address/AddressFields'
+import { CarDetailsFields } from '../components/profile/CarDetailsFields'
 import { ISRAELI_TEAMS, PROFILE, COMMON } from '../constants'
-
-const SEAT_OPTIONS = [2, 3, 4, 5, 6, 7]
 
 interface InitialProfile {
   favoriteTeam: string
@@ -123,54 +122,16 @@ export function ProfileCompletion({
 
           <AddressFields onChange={setAddress} initialValue={initialProfile?.address} />
 
-          <Typography variant="subtitle2" color="text.secondary">
-            {PROFILE.carDetails}
-          </Typography>
-
-          <Stack direction="row" spacing={2}>
-            <TextField
-              label={PROFILE.make}
-              value={carMake}
-              onChange={(e) => setCarMake(e.target.value)}
-              fullWidth
-              required
-              placeholder={PROFILE.makePlaceholder}
-            />
-            <TextField
-              label={PROFILE.model}
-              value={carModel}
-              onChange={(e) => setCarModel(e.target.value)}
-              fullWidth
-              required
-              placeholder={PROFILE.modelPlaceholder}
-            />
-          </Stack>
-
-          <Stack direction="row" spacing={2}>
-            <TextField
-              label={PROFILE.year}
-              value={carYear}
-              onChange={(e) => setCarYear(e.target.value)}
-              type="number"
-              fullWidth
-              required
-              slotProps={{ htmlInput: { min: 1990, max: currentYear + 1 } }}
-            />
-            <TextField
-              select
-              label={PROFILE.seats}
-              value={carSeats}
-              onChange={(e) => setCarSeats(e.target.value)}
-              fullWidth
-              required
-            >
-              {SEAT_OPTIONS.map((n) => (
-                <MenuItem key={n} value={n}>
-                  {n}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
+          <CarDetailsFields
+            make={carMake}
+            model={carModel}
+            year={carYear}
+            seats={carSeats}
+            onMakeChange={setCarMake}
+            onModelChange={setCarModel}
+            onYearChange={setCarYear}
+            onSeatsChange={setCarSeats}
+          />
 
           {error && (
             <Typography color="error" variant="body2">

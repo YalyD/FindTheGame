@@ -1,7 +1,7 @@
 import { Autocomplete, Box, IconButton, Stack, TextField, Tooltip } from '@mui/material'
 import MyLocationIcon from '@mui/icons-material/MyLocation'
 import { useEffect, useRef, useState } from 'react'
-import { ADDRESS_FIELDS } from '../constants'
+import { ADDRESS_FIELDS } from '../../constants'
 
 interface NominatimResult {
   place_id: number

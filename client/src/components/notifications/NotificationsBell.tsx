@@ -15,7 +15,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { NOTIFICATIONS } from '../constants'
+import { NOTIFICATIONS } from '../../constants'
 
 interface INotification {
   _id: string

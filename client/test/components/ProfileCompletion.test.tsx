@@ -6,7 +6,7 @@ import { ProfileCompletion } from '../../src/pages/ProfileCompletion'
 
 // Stub AddressFields with a plain input so we can drive the address value
 // without going through MUI Autocomplete / Nominatim.
-vi.mock('../../src/components/AddressFields', () => ({
+vi.mock('../../src/components/address/AddressFields', () => ({
   AddressFields: ({ onChange }: { onChange: (v: string) => void }) => (
     <input
       aria-label="address"

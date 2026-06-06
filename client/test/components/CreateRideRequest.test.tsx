@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { CreateRideRequest } from '../../src/pages/CreateRideRequest'
 
-vi.mock('../../src/components/AddressFields', () => ({
+vi.mock('../../src/components/address/AddressFields', () => ({
   AddressFields: ({ onChange }: { onChange: (v: string) => void }) => (
     <input
       aria-label="origin"

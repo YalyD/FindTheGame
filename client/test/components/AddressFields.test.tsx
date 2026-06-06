@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AddressFields } from '../../src/components/AddressFields'
+import { AddressFields } from '../../src/components/address/AddressFields'
 
 const reverseGeocode = {
   address: { road: 'הרצל', house_number: '5', city: 'תל אביב' },

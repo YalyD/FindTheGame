@@ -1,6 +1,6 @@
 import { Autocomplete, TextField } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
-import { ADDRESS_AUTOCOMPLETE } from '../constants'
+import { ADDRESS_AUTOCOMPLETE } from '../../constants'
 
 interface NominatimResult {
   place_id: number

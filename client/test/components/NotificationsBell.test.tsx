@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
-import { NotificationsBell } from '../../src/components/NotificationsBell'
+import { NotificationsBell } from '../../src/components/notifications/NotificationsBell'
 
 vi.mock('axios', () => ({
   default: { get: vi.fn(), patch: vi.fn() },

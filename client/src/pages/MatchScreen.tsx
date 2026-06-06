@@ -1,37 +1,11 @@
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Container,
-  Divider,
-  Skeleton,
-  Stack,
-  Typography,
-} from '@mui/material'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { Alert, Button, Container, Divider, Stack, Typography } from '@mui/material'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
-import LocationOnIcon from '@mui/icons-material/LocationOn'
-import StarIcon from '@mui/icons-material/Star'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { COMMON, MATCH } from '../constants'
-
-interface Driver {
-  _id: string
-  name: string
-  picture: string
-}
-
-interface Offer {
-  _id: string
-  driver: Driver
-  origin: string
-  seatsAvailable: number
-}
+import { MATCH } from '../constants'
+import { LoadingCards } from '../components/shared/LoadingCards'
+import { OfferCard } from '../components/match/OfferCard'
+import type { RideOffer } from '../components/match/types'
 
 interface Props {
   gameId: string
@@ -41,83 +15,8 @@ interface Props {
   onDone: () => void
 }
 
-function OfferCard({
-  offer,
-  isBest,
-  seatsNeeded,
-  onJoin,
-  joining,
-  joined,
-}: {
-  offer: Offer
-  isBest: boolean
-  seatsNeeded: number
-  onJoin: (offerId: string) => void
-  joining: boolean
-  joined: boolean
-}) {
-  const hasEnough = offer.seatsAvailable >= seatsNeeded
-
-  return (
-    <Card
-      sx={
-        isBest
-          ? {
-              border: '2px solid',
-              borderColor: 'primary.main',
-              boxShadow: '0 10px 24px -10px rgba(239, 108, 0, 0.3)',
-            }
-          : undefined
-      }
-    >
-      <CardContent>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
-          {isBest && <StarIcon color="primary" fontSize="small" />}
-          <Avatar src={offer.driver.picture} sx={{ width: 32, height: 32 }}>
-            {offer.driver.name.charAt(0)}
-          </Avatar>
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography sx={{ fontWeight: 600 }}>{offer.driver.name}</Typography>
-          </Box>
-          <Chip
-            label={COMMON.seats(offer.seatsAvailable)}
-            size="small"
-            color={hasEnough ? 'success' : 'warning'}
-            variant="outlined"
-          />
-        </Stack>
-
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
-          <LocationOnIcon fontSize="small" color="action" />
-          <Typography variant="body2" color="text.secondary">
-            {offer.origin}
-          </Typography>
-        </Stack>
-
-        {joined ? (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <CheckCircleIcon color="success" fontSize="small" />
-            <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-              {MATCH.joined}
-            </Typography>
-          </Stack>
-        ) : (
-          <Button
-            variant={isBest ? 'contained' : 'outlined'}
-            fullWidth
-            disabled={!hasEnough || joining}
-            onClick={() => onJoin(offer._id)}
-          >
-            {joining ? MATCH.joining : hasEnough ? MATCH.join : MATCH.notEnoughSeats}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
 export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: Props) {
-  const [offers, setOffers] = useState<Offer[]>([])
+  const [offers, setOffers] = useState<RideOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [joiningId, setJoiningId] = useState<string | null>(null)
   const [joinedId, setJoinedId] = useState<string | null>(null)
@@ -125,7 +24,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
 
   useEffect(() => {
     axios
-      .get<Offer[]>(`/api/ride-offers/game/${gameId}`, {
+      .get<RideOffer[]>(`/api/ride-offers/game/${gameId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setOffers(res.data))
@@ -176,11 +75,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
       )}
 
       {loading ? (
-        <Stack spacing={2}>
-          {[1, 2].map((i) => (
-            <Skeleton key={i} variant="rounded" height={130} />
-          ))}
-        </Stack>
+        <LoadingCards count={2} height={130} />
       ) : offers.length === 0 ? (
         <Alert severity="success" sx={{ mb: 2 }}>
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
