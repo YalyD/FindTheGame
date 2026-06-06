@@ -27,7 +27,7 @@ interface Props {
   token: string
 }
 
-function timeAgo(dateStr: string) {
+export function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return 'עכשיו'

@@ -23,7 +23,7 @@ interface Props {
 
 // Parse "Street House, City" back into the three structured fields.
 // Tolerant — returns whatever it can recover.
-function parseAddress(stored: string): { city: string; street: string; houseNumber: string } {
+export function parseAddress(stored: string): { city: string; street: string; houseNumber: string } {
   const empty = { city: '', street: '', houseNumber: '' }
   if (!stored) return empty
   const parts = stored.split(',')
@@ -215,6 +215,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
             <IconButton
               onClick={useCurrentLocation}
               disabled={geoLoading}
+              aria-label="השתמש במיקום הנוכחי שלי"
               color="primary"
               sx={{ mt: 1, bgcolor: 'rgba(239, 108, 0, 0.08)', '&:hover': { bgcolor: 'rgba(239, 108, 0, 0.16)' } }}
             >
