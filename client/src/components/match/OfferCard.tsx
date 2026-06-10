@@ -1,6 +1,7 @@
 import { Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation'
 import StarIcon from '@mui/icons-material/Star'
 import { COMMON, MATCH } from '../../constants'
 
@@ -16,6 +17,11 @@ interface Props {
 // A driver's ride offer on the match screen, with a join action.
 export function OfferCard({ offer, isBest, seatsNeeded, onJoin, joining, joined }: Props) {
   const hasEnough = offer.seatsAvailable >= seatsNeeded
+  // Equal split between everyone in the car if this user joins:
+  // driver + passengers already in + this user.
+  const fuelShare = offer.fuelCost
+    ? Math.round(offer.fuelCost.totalCost / (offer.passengers.length + 2))
+    : null
 
   return (
     <Card
@@ -52,6 +58,20 @@ export function OfferCard({ offer, isBest, seatsNeeded, onJoin, joining, joined 
             {offer.origin}
           </Typography>
         </Stack>
+
+        {fuelShare !== null && offer.fuelCost && (
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
+            <LocalGasStationIcon fontSize="small" color="action" />
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {MATCH.fuelShare(fuelShare)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {MATCH.fuelDetails(offer.fuelCost.distanceKm, offer.fuelCost.totalCost)}
+              </Typography>
+            </Box>
+          </Stack>
+        )}
 
         {joined ? (
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

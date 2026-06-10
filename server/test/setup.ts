@@ -11,6 +11,12 @@ vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation((...args) =
   mockGoogleVerify(...args),
 )
 
+// No real network in tests: the fuel-cost estimate (fueleconomy.gov,
+// Nominatim, OSRM) degrades to null when fetch rejects. Tests that need
+// specific responses override this with mockFetch.mockResolvedValueOnce(...).
+export const mockFetch = vi.fn().mockRejectedValue(new Error('network disabled in tests'))
+vi.stubGlobal('fetch', mockFetch)
+
 // Set env BEFORE any module imports loadEnv().
 // The test database is a separate DB on the dev `mongo` container — never the
 // app's working database, so cleanup is safe.

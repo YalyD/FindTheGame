@@ -35,6 +35,14 @@ interface PopulatedRequest {
   status: 'open' | 'matched' | 'cancelled'
 }
 
+// Estimated round-trip fuel cost of an offer, computed by the server at
+// creation. null when the estimate failed (unknown address, API down, ...).
+interface FuelCost {
+  distanceKm: number
+  consumption: number
+  totalCost: number
+}
+
 // A ride offer with its game and passengers populated by the server.
 interface PopulatedOffer {
   _id: string
@@ -43,6 +51,7 @@ interface PopulatedOffer {
   seatsAvailable: number
   passengers: Passenger[]
   status: 'open' | 'full' | 'cancelled'
+  fuelCost?: FuelCost | null
 }
 
 // A ride offer as shown on the match screen, with its driver populated.
@@ -51,6 +60,8 @@ interface RideOffer {
   driver: Driver
   origin: string
   seatsAvailable: number
+  passengers: string[]
+  fuelCost?: FuelCost | null
 }
 
 // ---- FindTheGame API ----

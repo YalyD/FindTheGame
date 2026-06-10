@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation'
 import { useState } from 'react'
 import { ACTIVITY } from '../../constants'
 import { GameInfo } from '../game/GameInfo'
@@ -27,6 +28,10 @@ interface Props {
 export function OfferCard({ offer, onCancel }: Props) {
   const [cancelling, setCancelling] = useState(false)
   const statusInfo = OFFER_STATUS[offer.status]
+  // Equal split between everyone currently in the car: driver + passengers.
+  const fuelPerPerson = offer.fuelCost
+    ? Math.round(offer.fuelCost.totalCost / (offer.passengers.length + 1))
+    : null
 
   async function handleCancel() {
     setCancelling(true)
@@ -57,6 +62,15 @@ export function OfferCard({ offer, onCancel }: Props) {
             color={offer.seatsAvailable > 0 ? 'success' : 'warning'}
           />
         </Stack>
+
+        {fuelPerPerson !== null && offer.fuelCost && (
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 1.5 }}>
+            <LocalGasStationIcon fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {ACTIVITY.fuelTotal(offer.fuelCost.totalCost)} · {ACTIVITY.fuelPerPerson(fuelPerPerson)}
+            </Typography>
+          </Stack>
+        )}
 
         {offer.passengers.length > 0 && (
           <Box sx={{ mt: 1.5 }}>

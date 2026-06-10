@@ -10,6 +10,7 @@ import { Notification } from '../models/Notification.js'
 import { User } from '../models/User.js'
 import { Game } from '../models/Game.js'
 import { sendPushToUser } from '../lib/webpush.js'
+import { estimateOfferFuelCost } from '../lib/fuelCost.js'
 
 export const rideOffersRouter = Router()
 
@@ -39,11 +40,26 @@ rideOffersRouter.post(
     })
     if (existing) throw new HttpError(409, 'כבר קיימת הצעה פתוחה למשחק זה')
 
+    const [driver, game] = await Promise.all([
+      User.findById(req.user!.userId, 'car'),
+      Game.findById(gameId, 'stadium city'),
+    ])
+    if (!game) throw new HttpError(404, 'המשחק לא נמצא')
+
+    // Best-effort: a failed estimate must never block publishing the offer.
+    const fuelCost = await estimateOfferFuelCost(
+      driver?.car,
+      origin,
+      game.stadium,
+      game.city,
+    ).catch(() => null)
+
     const offer = await RideOffer.create({
       game: gameId,
       driver: req.user!.userId,
       origin,
       seatsAvailable,
+      fuelCost,
     })
 
     res.status(201).json(offer)

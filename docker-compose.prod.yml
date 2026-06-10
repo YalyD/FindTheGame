@@ -31,6 +31,7 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       VAPID_EMAIL: ${VAPID_EMAIL}
       RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      FUEL_PRICE_ILS: ${FUEL_PRICE_ILS:-7.3}
     depends_on:
       mongo:
         condition: service_healthy

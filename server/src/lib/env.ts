@@ -11,6 +11,7 @@ const schema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_EMAIL: z.string().email().optional(),
   RAPIDAPI_KEY: z.string().optional(),
+  FUEL_PRICE_ILS: z.coerce.number().positive().default(7.3),
 })
 
 export type Env = z.infer<typeof schema>

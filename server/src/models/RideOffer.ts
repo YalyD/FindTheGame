@@ -9,6 +9,13 @@ export interface IRideOffer extends Document {
   seatsAvailable: number
   passengers: mongoose.Types.ObjectId[]
   status: RideOfferStatus
+  // Estimated round-trip fuel cost, computed once at creation.
+  // null when the estimate failed (offline geocoder, unknown address, ...).
+  fuelCost: {
+    distanceKm: number
+    consumption: number
+    totalCost: number
+  } | null
   createdAt: Date
 }
 
@@ -20,6 +27,15 @@ const rideOfferSchema = new Schema<IRideOffer>(
     seatsAvailable: { type: Number, required: true, min: 0, max: 6 },
     passengers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     status: { type: String, enum: ['open', 'full', 'cancelled'], default: 'open' },
+    fuelCost: {
+      type: {
+        distanceKm: { type: Number, required: true },
+        consumption: { type: Number, required: true },
+        totalCost: { type: Number, required: true },
+      },
+      default: null,
+      _id: false,
+    },
   },
   { timestamps: true },
 )

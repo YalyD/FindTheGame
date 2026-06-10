@@ -134,6 +134,8 @@ export const MATCH = {
   backToMain: 'חזור למסך הראשי',
   errorLoadOffers: 'שגיאה בטעינת ההצעות',
   errorJoin: 'שגיאה בהצטרפות להצעה',
+  fuelShare: (amount: number) => `חלקך בדלק אם תצטרף: כ-₪${amount}`,
+  fuelDetails: (km: number, total: number) => `${km} ק"מ לכל כיוון · סה"כ דלק ₪${total}`,
 } as const
 
 export const ACTIVITY = {
@@ -160,6 +162,8 @@ export const ACTIVITY = {
   seatsAvailable: (n: number) => `${n} מושבים פנויים`,
   myRequestsTab: (n: number) => `הבקשות שלי (${n})`,
   myOffersTab: (n: number) => `ההצעות שלי (${n})`,
+  fuelTotal: (total: number) => `עלות דלק משוערת (הלוך ושוב): ₪${total}`,
+  fuelPerPerson: (amount: number) => `כ-₪${amount} לאדם בחלוקה שווה`,
 } as const
 
 export const NOTIFICATIONS = {

@@ -29,6 +29,7 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       VAPID_EMAIL: ${VAPID_EMAIL}
       RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      FUEL_PRICE_ILS: ${FUEL_PRICE_ILS:-7.3}
     volumes:
       - ./server/src:/app/src
       - ./server/test:/app/test
