@@ -1,14 +1,11 @@
-import { Box, Container, Snackbar } from '@mui/material'
 import { useCallback, useEffect, useState } from 'react'
 import { MAIN } from '../constants'
 import { api } from '../apiHandler'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
 import { MatchScreen } from './MatchScreen'
-import { MyActivity } from './MyActivity'
 import { ProfileCompletion } from './ProfileCompletion'
-import { AppHeader } from '../components/layout/AppHeader'
-import { UpcomingGames } from '../components/game/UpcomingGames'
+import { HomeScreen } from './HomeScreen'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 
 interface Props {
@@ -124,45 +121,22 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #fff8ee 0%, #fff3d6 100%)',
-        position: 'relative',
-      }}
-    >
-      <AppHeader
-        name={name}
-        token={token}
-        view={view}
-        onSelectView={setView}
-        onEditProfile={openProfileEdit}
-        onLogout={onLogout}
-      />
-
-      {view === 'activity' ? (
-        <Container maxWidth="sm" sx={{ py: 2 }}>
-          <MyActivity token={token} />
-        </Container>
-      ) : (
-        <UpcomingGames
-          games={games}
-          loading={loading}
-          refreshing={refreshing}
-          error={error}
-          onRefresh={() => loadGames('refresh')}
-          onRequestRide={setSelectedGame}
-          onOfferRide={setOfferGame}
-        />
-      )}
-
-      <Snackbar
-        open={!!toast}
-        autoHideDuration={4000}
-        onClose={() => setToast(null)}
-        message={toast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
-    </Box>
+    <HomeScreen
+      token={token}
+      name={name}
+      view={view}
+      onSelectView={setView}
+      onEditProfile={openProfileEdit}
+      onLogout={onLogout}
+      games={games}
+      loading={loading}
+      refreshing={refreshing}
+      error={error}
+      onRefresh={() => loadGames('refresh')}
+      onRequestRide={setSelectedGame}
+      onOfferRide={setOfferGame}
+      toast={toast}
+      onToastClose={() => setToast(null)}
+    />
   )
 }
