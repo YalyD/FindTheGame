@@ -8,23 +8,17 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { AddressFields } from '../components/address/AddressFields'
 import { CarDetailsFields } from '../components/profile/CarDetailsFields'
 import { ISRAELI_TEAMS, PROFILE, COMMON } from '../constants'
-
-interface InitialProfile {
-  favoriteTeam: string
-  address: string
-  car: { make: string; model: string; year: number; seats: number } | null
-}
+import { api } from '../apiHandler'
 
 interface Props {
   token: string
   onComplete: (newToken: string) => void
   mode?: 'create' | 'edit'
-  initialProfile?: InitialProfile | null
+  initialProfile?: ProfileSnapshot | null
   onCancel?: () => void
 }
 
@@ -70,21 +64,17 @@ export function ProfileCompletion({
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.patch<{ token: string }>(
-        '/api/users/me',
-        {
-          favoriteTeam,
-          address,
-          car: {
-            make: carMake,
-            model: carModel,
-            year: Number(carYear),
-            seats: Number(carSeats),
-          },
+      const newToken = await api.users.updateProfile(token, {
+        favoriteTeam,
+        address,
+        car: {
+          make: carMake,
+          model: carModel,
+          year: Number(carYear),
+          seats: Number(carSeats),
         },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
-      onComplete(res.data.token)
+      })
+      onComplete(newToken)
     } catch {
       setError(PROFILE.error)
     } finally {

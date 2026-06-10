@@ -12,7 +12,6 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { COMMON, MAIN } from '../../constants'
 import { formatGameDateShort } from '../../lib/date'
-import type { Game } from '../../types'
 
 interface Props {
   game: Game

@@ -3,7 +3,6 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import { MAIN } from '../../constants'
 import { GameCard } from './GameCard'
 import { LoadingCards } from '../shared/LoadingCards'
-import type { Game } from '../../types'
 
 interface Props {
   games: Game[]

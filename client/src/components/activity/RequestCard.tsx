@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { ACTIVITY, COMMON } from '../../constants'
 import { GameInfo } from '../game/GameInfo'
 import { REQUEST_STATUS } from './status'
-import type { PopulatedRequest } from './types'
 
 interface Props {
   req: PopulatedRequest

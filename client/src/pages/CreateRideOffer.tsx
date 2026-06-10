@@ -11,11 +11,10 @@ import {
 } from '@mui/material'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useState } from 'react'
-import axios from 'axios'
 import { AddressFields } from '../components/address/AddressFields'
 import { GameSummary } from '../components/game/GameSummary'
 import { COMMON, CREATE_OFFER } from '../constants'
-import type { Game } from '../types'
+import { api, apiErrorMessage } from '../apiHandler'
 
 interface Props {
   game: Game
@@ -37,18 +36,14 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
     setLoading(true)
     setError(null)
     try {
-      await axios.post(
-        '/api/ride-offers',
-        { gameId: game._id, origin, seatsAvailable: Number(seatsAvailable) },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
+      await api.rideOffers.create(token, {
+        gameId: game._id,
+        origin,
+        seatsAvailable: Number(seatsAvailable),
+      })
       onSuccess()
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError(CREATE_OFFER.error)
-      }
+      setError(apiErrorMessage(err, CREATE_OFFER.error))
     } finally {
       setLoading(false)
     }

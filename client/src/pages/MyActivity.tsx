@@ -1,11 +1,10 @@
 import { Alert, Box, Stack, Tab, Tabs, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 import { ACTIVITY } from '../constants'
+import { api } from '../apiHandler'
 import { LoadingCards } from '../components/shared/LoadingCards'
 import { RequestCard } from '../components/activity/RequestCard'
 import { OfferCard } from '../components/activity/OfferCard'
-import type { PopulatedOffer, PopulatedRequest } from '../components/activity/types'
 
 interface Props {
   token: string
@@ -19,29 +18,27 @@ export function MyActivity({ token }: Props) {
   const [loadingOff, setLoadingOff] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const headers = { Authorization: `Bearer ${token}` }
-
   useEffect(() => {
-    axios
-      .get<PopulatedRequest[]>('/api/ride-requests/mine', { headers })
-      .then((res) => setRequests(res.data))
+    api.rideRequests
+      .fetchMine(token)
+      .then(setRequests)
       .catch(() => setError(ACTIVITY.errorLoadRequests))
       .finally(() => setLoadingReq(false))
 
-    axios
-      .get<PopulatedOffer[]>('/api/ride-offers/mine', { headers })
-      .then((res) => setOffers(res.data))
+    api.rideOffers
+      .fetchMine(token)
+      .then(setOffers)
       .catch(() => setError(ACTIVITY.errorLoadOffers))
       .finally(() => setLoadingOff(false))
   }, [token])
 
   async function cancelRequest(id: string) {
-    await axios.patch(`/api/ride-requests/${id}/cancel`, {}, { headers })
+    await api.rideRequests.cancel(token, id)
     setRequests((prev) => prev.filter((r) => r._id !== id))
   }
 
   async function cancelOffer(id: string) {
-    await axios.patch(`/api/ride-offers/${id}/cancel`, {}, { headers })
+    await api.rideOffers.cancel(token, id)
     setOffers((prev) => prev.filter((o) => o._id !== id))
   }
 

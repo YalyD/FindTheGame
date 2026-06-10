@@ -1,11 +1,7 @@
 import { Autocomplete, TextField } from '@mui/material'
 import { useEffect, useRef, useState } from 'react'
 import { ADDRESS_AUTOCOMPLETE } from '../../constants'
-
-interface NominatimResult {
-  place_id: number
-  display_name: string
-}
+import { searchAddresses } from '../../geocoding_util'
 
 interface Props {
   label: string
@@ -31,10 +27,7 @@ export function AddressAutocomplete({ label, value, onChange, placeholder, helpe
     debounceRef.current = setTimeout(async () => {
       setLoading(true)
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(inputValue)}&format=json&countrycodes=il&limit=6&addressdetails=0`
-        const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
-        const data: NominatimResult[] = await res.json()
-        setOptions(data.map((r) => r.display_name))
+        setOptions(await searchAddresses(inputValue))
       } catch {
         setOptions([])
       } finally {

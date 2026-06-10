@@ -3,7 +3,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import StarIcon from '@mui/icons-material/Star'
 import { COMMON, MATCH } from '../../constants'
-import type { RideOffer } from './types'
 
 interface Props {
   offer: RideOffer

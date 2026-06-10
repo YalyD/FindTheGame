@@ -17,7 +17,6 @@ import { useState } from 'react'
 import { ACTIVITY } from '../../constants'
 import { GameInfo } from '../game/GameInfo'
 import { OFFER_STATUS } from './status'
-import type { PopulatedOffer } from './types'
 
 interface Props {
   offer: PopulatedOffer

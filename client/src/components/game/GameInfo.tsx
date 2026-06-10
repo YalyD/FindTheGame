@@ -4,7 +4,6 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { ACTIVITY, COMMON } from '../../constants'
 import { formatGameDateShort } from '../../lib/date'
-import type { Game } from '../../types'
 
 // Compact game header used inside activity cards. Tolerates a deleted game.
 export function GameInfo({ game }: { game: Game | null }) {

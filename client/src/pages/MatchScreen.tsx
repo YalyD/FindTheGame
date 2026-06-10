@@ -1,11 +1,10 @@
 import { Alert, Button, Container, Divider, Stack, Typography } from '@mui/material'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 import { MATCH } from '../constants'
+import { api, apiErrorMessage } from '../apiHandler'
 import { LoadingCards } from '../components/shared/LoadingCards'
 import { OfferCard } from '../components/match/OfferCard'
-import type { RideOffer } from '../components/match/types'
 
 interface Props {
   gameId: string
@@ -23,11 +22,9 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    axios
-      .get<RideOffer[]>(`/api/ride-offers/game/${gameId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setOffers(res.data))
+    api.rideOffers
+      .fetchForGame(token, gameId)
+      .then(setOffers)
       .catch(() => setError(MATCH.errorLoadOffers))
       .finally(() => setLoading(false))
   }, [gameId, token])
@@ -36,18 +33,10 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
     setJoiningId(offerId)
     setError(null)
     try {
-      await axios.post(
-        `/api/ride-offers/${offerId}/join`,
-        { requestId },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
+      await api.rideOffers.join(token, offerId, requestId)
       setJoinedId(offerId)
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError(MATCH.errorJoin)
-      }
+      setError(apiErrorMessage(err, MATCH.errorJoin))
     } finally {
       setJoiningId(null)
     }

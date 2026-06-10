@@ -1,5 +1,4 @@
 import { ACTIVITY } from '../../constants'
-import type { PopulatedOffer, PopulatedRequest } from './types'
 
 export const REQUEST_STATUS: Record<
   PopulatedRequest['status'],

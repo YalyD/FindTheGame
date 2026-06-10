@@ -9,16 +9,10 @@ import {
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
-import axios from 'axios'
 import { AddressFields } from '../components/address/AddressFields'
 import { GameSummary } from '../components/game/GameSummary'
 import { COMMON, CREATE_REQUEST } from '../constants'
-import type { Game } from '../types'
-
-interface CreatedRequest {
-  _id: string
-  seatsNeeded: number
-}
+import { api, apiErrorMessage } from '../apiHandler'
 
 interface Props {
   game: Game
@@ -40,18 +34,14 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.post<CreatedRequest>(
-        '/api/ride-requests',
-        { gameId: game._id, origin, seatsNeeded: Number(seatsNeeded) },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
-      onSuccess(res.data)
+      const created = await api.rideRequests.create(token, {
+        gameId: game._id,
+        origin,
+        seatsNeeded: Number(seatsNeeded),
+      })
+      onSuccess(created)
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError(CREATE_REQUEST.error)
-      }
+      setError(apiErrorMessage(err, CREATE_REQUEST.error))
     } finally {
       setLoading(false)
     }

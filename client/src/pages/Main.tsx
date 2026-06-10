@@ -1,7 +1,7 @@
 import { Box, Container, Snackbar } from '@mui/material'
 import { useCallback, useEffect, useState } from 'react'
-import axios from 'axios'
 import { MAIN } from '../constants'
+import { api } from '../apiHandler'
 import { CreateRideRequest } from './CreateRideRequest'
 import { CreateRideOffer } from './CreateRideOffer'
 import { MatchScreen } from './MatchScreen'
@@ -10,19 +10,12 @@ import { ProfileCompletion } from './ProfileCompletion'
 import { AppHeader } from '../components/layout/AppHeader'
 import { UpcomingGames } from '../components/game/UpcomingGames'
 import { usePushSubscription } from '../hooks/usePushSubscription'
-import type { Game } from '../types'
 
 interface Props {
   token: string
   name: string
   onLogout: () => void
   onProfileUpdated: (newToken: string) => void
-}
-
-interface ProfileSnapshot {
-  favoriteTeam: string
-  address: string
-  car: { make: string; model: string; year: number; seats: number } | null
 }
 
 export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
@@ -45,10 +38,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
 
   async function openProfileEdit() {
     try {
-      const res = await axios.get<ProfileSnapshot>('/api/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setEditingProfile(res.data)
+      setEditingProfile(await api.users.fetchProfile(token))
     } catch {
       setToast(MAIN.errorLoadProfile)
     }
@@ -59,10 +49,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
       if (mode === 'refresh') setRefreshing(true)
       setError(null)
       try {
-        const res = await axios.get<Game[]>('/api/games', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setGames(res.data)
+        setGames(await api.games.fetchAll(token))
       } catch {
         setError(MAIN.errorLoadGames)
       } finally {

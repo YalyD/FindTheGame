@@ -14,15 +14,8 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 import { NOTIFICATIONS } from '../../constants'
-
-interface INotification {
-  _id: string
-  message: string
-  read: boolean
-  createdAt: string
-}
+import { api } from '../../apiHandler'
 
 interface Props {
   token: string
@@ -41,12 +34,10 @@ export function timeAgo(dateStr: string) {
 export function NotificationsBell({ token }: Props) {
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null)
   const queryClient = useQueryClient()
-  const headers = { Authorization: `Bearer ${token}` }
 
   const { data: notifications = [] } = useQuery<INotification[]>({
     queryKey: ['notifications'],
-    queryFn: () =>
-      axios.get<INotification[]>('/api/notifications', { headers }).then((r) => r.data),
+    queryFn: () => api.notifications.fetchAll(token),
     refetchOnWindowFocus: true,
   })
 
@@ -66,7 +57,7 @@ export function NotificationsBell({ token }: Props) {
   async function handleOpen(e: React.MouseEvent<HTMLButtonElement>) {
     setAnchor(e.currentTarget)
     if (unreadCount > 0) {
-      await axios.patch('/api/notifications/read-all', {}, { headers })
+      await api.notifications.markAllRead(token)
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     }
   }
@@ -105,7 +96,7 @@ export function NotificationsBell({ token }: Props) {
               <Button
                 size="small"
                 onClick={async () => {
-                  await axios.patch('/api/notifications/read-all', {}, { headers })
+                  await api.notifications.markAllRead(token)
                   queryClient.invalidateQueries({ queryKey: ['notifications'] })
                 }}
               >

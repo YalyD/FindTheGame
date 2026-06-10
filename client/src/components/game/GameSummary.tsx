@@ -4,7 +4,6 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { COMMON } from '../../constants'
 import { formatGameDateLong } from '../../lib/date'
-import type { Game } from '../../types'
 
 // Highlighted game summary shown at the top of the create-request / create-offer
 // screens: matchup, kickoff time and venue.

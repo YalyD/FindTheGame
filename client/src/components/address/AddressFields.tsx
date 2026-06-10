@@ -2,20 +2,7 @@ import { Autocomplete, Box, IconButton, Stack, TextField, Tooltip } from '@mui/m
 import MyLocationIcon from '@mui/icons-material/MyLocation'
 import { useEffect, useRef, useState } from 'react'
 import { ADDRESS_FIELDS } from '../../constants'
-
-interface NominatimResult {
-  place_id: number
-  display_name: string
-  address?: {
-    city?: string
-    town?: string
-    village?: string
-    hamlet?: string
-    municipality?: string
-    road?: string
-    house_number?: string
-  }
-}
+import { cityName, reverseGeocode, searchCities, searchStreets } from '../../geocoding_util'
 
 interface Props {
   onChange: (value: string) => void
@@ -74,19 +61,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
     cityDebounce.current = setTimeout(async () => {
       setCityLoading(true)
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityInput)}&format=json&countrycodes=il&limit=10&addressdetails=1`
-        const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
-        const data: NominatimResult[] = await res.json()
-        const cities = data
-          .map((r) =>
-            r.address?.city ??
-            r.address?.municipality ??
-            r.address?.town ??
-            r.address?.village ??
-            r.address?.hamlet,
-          )
-          .filter((name): name is string => !!name)
-        setCityOptions([...new Set(cities)])
+        setCityOptions(await searchCities(cityInput))
       } catch {
         setCityOptions([])
       } finally {
@@ -104,14 +79,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
     streetDebounce.current = setTimeout(async () => {
       setStreetLoading(true)
       try {
-        const q = encodeURIComponent(`${streetInput}, ${city}`)
-        const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&countrycodes=il&limit=10&addressdetails=1`
-        const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
-        const data: NominatimResult[] = await res.json()
-        const streets = data
-          .map((r) => r.address?.road)
-          .filter((r): r is string => !!r && r.length > 0)
-        setStreetOptions([...new Set(streets)])
+        setStreetOptions(await searchStreets(streetInput, city))
       } catch {
         setStreetOptions([])
       } finally {
@@ -144,15 +112,10 @@ export function AddressFields({ onChange, initialValue }: Props) {
         })
       })
       const { latitude, longitude } = pos.coords
-      const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
-      const res = await fetch(url, { headers: { 'Accept-Language': 'he' } })
-      if (!res.ok) throw new Error('reverse geocode failed')
-      const data: NominatimResult = await res.json()
-      const a = data.address
-      const newCity =
-        a?.city ?? a?.municipality ?? a?.town ?? a?.village ?? a?.hamlet ?? ''
-      const newStreet = a?.road ?? ''
-      const newHouse = a?.house_number ?? ''
+      const address = await reverseGeocode(latitude, longitude)
+      const newCity = cityName(address)
+      const newStreet = address?.road ?? ''
+      const newHouse = address?.house_number ?? ''
       if (!newCity) {
         setGeoError(ADDRESS_FIELDS.geoNoAddress)
         return
