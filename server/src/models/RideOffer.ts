@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
-export type RideOfferStatus = 'open' | 'full' | 'cancelled'
+export type RideOfferStatus = 'open' | 'full' | 'cancelled' | 'closed'
 
 export interface IRideOffer extends Document {
   game: mongoose.Types.ObjectId
@@ -26,7 +26,7 @@ const rideOfferSchema = new Schema<IRideOffer>(
     origin: { type: String, required: true },
     seatsAvailable: { type: Number, required: true, min: 0, max: 6 },
     passengers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    status: { type: String, enum: ['open', 'full', 'cancelled'], default: 'open' },
+    status: { type: String, enum: ['open', 'full', 'cancelled', 'closed'], default: 'open' },
     fuelCost: {
       type: {
         distanceKm: { type: Number, required: true },

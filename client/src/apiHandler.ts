@@ -79,6 +79,10 @@ export const api = {
       await axios.patch(`/api/ride-offers/${id}/cancel`, {}, authHeaders(token))
     },
 
+    async close(token: string, id: string): Promise<void> {
+      await axios.patch(`/api/ride-offers/${id}/close`, {}, authHeaders(token))
+    },
+
     async fetchForGame(token: string, gameId: string): Promise<RideOffer[]> {
       const res = await axios.get<RideOffer[]>(`/api/ride-offers/game/${gameId}`, authHeaders(token))
       return res.data

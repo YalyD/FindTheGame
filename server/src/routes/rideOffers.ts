@@ -102,6 +102,21 @@ rideOffersRouter.patch(
   },
 )
 
+rideOffersRouter.patch(
+  '/:id/close',
+  requireAuth,
+  validate(idParam, 'params'),
+  async (req: AuthRequest, res: Response) => {
+    const offer = await RideOffer.findOne({ _id: req.params.id, driver: req.user!.userId })
+    if (!offer) throw new HttpError(404, 'ההצעה לא נמצאה')
+    if (offer.status === 'cancelled') throw new HttpError(409, 'לא ניתן לסגור הצעה שבוטלה')
+    if (offer.status === 'closed') throw new HttpError(409, 'ההצעה כבר סגורה')
+    offer.status = 'closed'
+    await offer.save()
+    res.json({ ok: true })
+  },
+)
+
 rideOffersRouter.post(
   '/:id/join',
   requireAuth,

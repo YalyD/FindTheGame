@@ -115,6 +115,57 @@ describe('GET /api/ride-offers/game/:gameId', () => {
   })
 })
 
+describe('PATCH /api/ride-offers/:id/close', () => {
+  it('sets status to closed for the owning driver', async () => {
+    const u = await makeUser()
+    const game = await makeGame()
+    const offer = await RideOffer.create({
+      game: game._id,
+      driver: u.user._id,
+      origin: 'A spot',
+      seatsAvailable: 3,
+    })
+
+    const res = await request(app).patch(`/api/ride-offers/${offer._id}/close`).set(u.authHeader)
+    expect(res.status).toBe(200)
+    const updated = await RideOffer.findById(offer._id)
+    expect(updated).not.toBeNull()
+    expect(updated!.status).toBe('closed')
+  })
+
+  it('refuses to close an offer owned by someone else', async () => {
+    const owner = await makeUser()
+    const attacker = await makeUser()
+    const game = await makeGame()
+    const offer = await RideOffer.create({
+      game: game._id,
+      driver: owner.user._id,
+      origin: 'A spot',
+      seatsAvailable: 3,
+    })
+
+    const res = await request(app)
+      .patch(`/api/ride-offers/${offer._id}/close`)
+      .set(attacker.authHeader)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 409 when already closed', async () => {
+    const u = await makeUser()
+    const game = await makeGame()
+    const offer = await RideOffer.create({
+      game: game._id,
+      driver: u.user._id,
+      origin: 'A spot',
+      seatsAvailable: 3,
+      status: 'closed',
+    })
+
+    const res = await request(app).patch(`/api/ride-offers/${offer._id}/close`).set(u.authHeader)
+    expect(res.status).toBe(409)
+  })
+})
+
 describe('PATCH /api/ride-offers/:id/cancel', () => {
   it('cancels (deletes) an offer owned by the caller', async () => {
     const u = await makeUser()

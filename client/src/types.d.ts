@@ -50,7 +50,7 @@ interface PopulatedOffer {
   origin: string
   seatsAvailable: number
   passengers: Passenger[]
-  status: 'open' | 'full' | 'cancelled'
+  status: 'open' | 'full' | 'cancelled' | 'closed'
   fuelCost?: FuelCost | null
 }
 

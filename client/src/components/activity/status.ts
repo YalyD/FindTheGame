@@ -11,9 +11,10 @@ export const REQUEST_STATUS: Record<
 
 export const OFFER_STATUS: Record<
   PopulatedOffer['status'],
-  { label: string; color: 'info' | 'warning' | 'default' }
+  { label: string; color: 'info' | 'success' | 'warning' | 'default' }
 > = {
   open: { label: ACTIVITY.offerStatus.open, color: 'info' },
   full: { label: ACTIVITY.offerStatus.full, color: 'warning' },
   cancelled: { label: ACTIVITY.offerStatus.cancelled, color: 'default' },
+  closed: { label: ACTIVITY.offerStatus.closed, color: 'success' },
 }

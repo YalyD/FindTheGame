@@ -37,9 +37,9 @@ export function MyActivity({ token }: Props) {
     setRequests((prev) => prev.filter((r) => r._id !== id))
   }
 
-  async function cancelOffer(id: string) {
-    await api.rideOffers.cancel(token, id)
-    setOffers((prev) => prev.filter((o) => o._id !== id))
+  async function closeOffer(id: string) {
+    await api.rideOffers.close(token, id)
+    setOffers((prev) => prev.map((o) => (o._id === id ? { ...o, status: 'closed' as const } : o)))
   }
 
   return (
@@ -81,7 +81,7 @@ export function MyActivity({ token }: Props) {
             ) : (
               <Stack spacing={2}>
                 {offers.map((offer) => (
-                  <OfferCard key={offer._id} offer={offer} onCancel={cancelOffer} />
+                  <OfferCard key={offer._id} offer={offer} onClose={closeOffer} />
                 ))}
               </Stack>
             )}

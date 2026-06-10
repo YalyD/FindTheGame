@@ -21,22 +21,22 @@ import { OFFER_STATUS } from './status'
 
 interface Props {
   offer: PopulatedOffer
-  onCancel: (id: string) => Promise<void>
+  onClose: (id: string) => Promise<void>
 }
 
-// A ride offer the user published, with joined passengers and a cancel action.
-export function OfferCard({ offer, onCancel }: Props) {
-  const [cancelling, setCancelling] = useState(false)
+// A ride offer the user published, with joined passengers and a close action.
+export function OfferCard({ offer, onClose }: Props) {
+  const [closing, setClosing] = useState(false)
   const statusInfo = OFFER_STATUS[offer.status]
   // Equal split between everyone currently in the car: driver + passengers.
   const fuelPerPerson = offer.fuelCost
     ? Math.round(offer.fuelCost.totalCost / (offer.passengers.length + 1))
     : null
 
-  async function handleCancel() {
-    setCancelling(true)
-    await onCancel(offer._id)
-    setCancelling(false)
+  async function handleClose() {
+    setClosing(true)
+    await onClose(offer._id)
+    setClosing(false)
   }
 
   return (
@@ -99,13 +99,13 @@ export function OfferCard({ offer, onCancel }: Props) {
           <Box sx={{ mt: 1.5 }}>
             <Button
               size="small"
-              color="error"
+              color="warning"
               variant="outlined"
-              onClick={handleCancel}
-              disabled={cancelling}
+              onClick={handleClose}
+              disabled={closing}
               fullWidth
             >
-              {cancelling ? ACTIVITY.cancelling : ACTIVITY.cancelOffer}
+              {closing ? ACTIVITY.closing : ACTIVITY.closeOffer}
             </Button>
           </Box>
         )}
