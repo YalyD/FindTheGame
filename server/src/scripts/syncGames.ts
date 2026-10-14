@@ -24,6 +24,8 @@ const TEAM_MAP: Record<string, string> = {
   'Maccabi Bnei Reineh':         'מכבי בני ריינה',
   'Maccabi Netanya':             'מכבי נתניה',
   'Ironi Dorot Tiberias':        'עירוני טבריה',
+  'Maccabi Petach Tikva':        'מכבי פתח תקווה',
+  'Hapoel Ramat Gan Givataim':   'הפועל רמת גן גבעתיים',
 }
 
 const COMPETITION_MAP: Record<string, string> = {
@@ -44,11 +46,13 @@ const STADIUM_MAP: Record<string, { stadium: string; city: string }> = {
   'הפועל באר שבע':        { stadium: 'אצטדיון טרנר', city: 'באר שבע' },
   'הפועל פתח תקווה':      { stadium: 'אצטדיון המושבה', city: 'פתח תקווה' },
   'בני סכנין':            { stadium: 'אצטדיון דוחא', city: 'סח\'נין' },
-  'עירוני קריית שמונה':   { stadium: 'אצטדיון קריית שמונה', city: 'קריית שמונה' },
+  'עירוני קריית שמונה':   { stadium: 'אצטדיון נתניה', city: 'נתניה' },
   'מ.ס. אשדוד':           { stadium: 'אצטדיון יוד אלף', city: 'אשדוד' },
   'מכבי בני ריינה':       { stadium: 'מגרש בני ריינה', city: 'בני ריינה' },
   'מכבי נתניה':           { stadium: 'אצטדיון נתניה', city: 'נתניה' },
   'עירוני טבריה':         { stadium: 'אצטדיון דורות', city: 'טבריה' },
+  'מכבי פתח תקווה':       { stadium: 'אצטדיון המושבה', city: 'פתח תקווה' },
+  'הפועל רמת גן גבעתיים': { stadium: 'אצטדיון רחובות', city: 'רחובות' },
 }
 
 function translate(name: string, map: Record<string, string>) {
@@ -59,53 +63,59 @@ function getVenue(homeTeam: string) {
   return STADIUM_MAP[homeTeam] ?? { stadium: 'אצטדיון לאומי', city: 'ישראל' }
 }
 
-function addDays(base: Date, n: number) {
-  const d = new Date(base)
-  d.setDate(d.getDate() + n)
-  return d.toISOString().split('T')[0]
+// SportAPI's unique-tournament id for the Israeli Premier League
+const LEAGUE_ID = 266
+
+type SportEvent = {
+  homeTeam: { name: string }
+  awayTeam: { name: string }
+  startTimestamp: number
+  tournament: { name: string }
 }
 
+async function api<T>(path: string): Promise<T> {
+  const res = await fetch(`https://${HOST}${path}`, {
+    headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': HOST },
+  })
+  if (!res.ok) throw new Error(`SportAPI ${res.status} on ${path}: ${await res.text()}`)
+  return res.json() as Promise<T>
+}
+
+// Uses the league's fixture list rather than one request per day: the free plan
+// only allows 50 requests, and the old per-date endpoint was removed.
 async function fetchIsraeliGames(daysAhead = 30) {
-  const base = new Date()
-  const games: {
-    homeTeam: string
-    awayTeam: string
-    date: Date
-    stadium: string
-    city: string
-    competition: string
-  }[] = []
+  const cutoff = Date.now() + daysAhead * 24 * 60 * 60 * 1000
 
-  for (let i = 0; i <= daysAhead; i++) {
-    const date = addDays(base, i)
-    const url = `https://${HOST}/api/v1/sport/football/scheduled-events/${date}`
-    const res = await fetch(url, {
-      headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': HOST },
-    })
-    if (!res.ok) continue
-    const text = await res.text()
-    if (!text) continue
-    const data = JSON.parse(text)
+  const { seasons } = await api<{ seasons: { id: number }[] }>(
+    `/api/v1/unique-tournament/${LEAGUE_ID}/seasons`,
+  )
+  const seasonId = seasons[0].id
 
-    const israeli = (data.events ?? []).filter(
-      (e: { tournament: { category: { name: string } } }) =>
-        e.tournament?.category?.name === 'Israel',
+  const events: SportEvent[] = []
+  for (let page = 0; ; page++) {
+    const data = await api<{ events: SportEvent[]; hasNextPage: boolean }>(
+      `/api/v1/unique-tournament/${LEAGUE_ID}/season/${seasonId}/events/next/${page}`,
     )
+    events.push(...data.events)
+    const last = data.events[data.events.length - 1]
+    if (!data.hasNextPage || !last || last.startTimestamp * 1000 > cutoff) break
+  }
 
-    for (const e of israeli) {
+  const games = events
+    .filter((e) => e.startTimestamp * 1000 <= cutoff)
+    .map((e) => {
       const homeTeam = translate(e.homeTeam.name, TEAM_MAP)
       const awayTeam = translate(e.awayTeam.name, TEAM_MAP)
       const venue = getVenue(homeTeam)
-      games.push({
+      return {
         homeTeam,
         awayTeam,
         date: new Date(e.startTimestamp * 1000),
         stadium: venue.stadium,
         city: venue.city,
         competition: translate(e.tournament.name, COMPETITION_MAP),
-      })
-    }
-  }
+      }
+    })
 
   // Dedupe: same teams + same date
   const seen = new Set<string>()
@@ -126,10 +136,13 @@ async function run() {
   const games = await fetchIsraeliGames(30)
   console.log(`Found ${games.length} games (after dedupe)`)
 
-  await Game.deleteMany({})
-  if (games.length > 0) {
-    await Game.insertMany(games)
+  // Replacing with nothing would wipe every game and cascade-delete all rides
+  if (games.length === 0) {
+    throw new Error('No games returned from SportAPI — leaving existing games untouched')
   }
+
+  await Game.deleteMany({})
+  await Game.insertMany(games)
   console.log(`Seeded ${games.length} games into MongoDB`)
 
   const validIds = (await Game.find({}, '_id').lean()).map((g) => g._id)
