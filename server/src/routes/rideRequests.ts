@@ -12,7 +12,7 @@ export const rideRequestsRouter = Router()
 const createBody = z.object({
   gameId: objectIdSchema,
   origin: z.string().trim().min(3).max(200),
-  seatsNeeded: z.number().int().min(1).max(8),
+  seatsNeeded: z.number().int().min(1).max(6),
 })
 
 const idParam = z.object({ id: objectIdSchema })

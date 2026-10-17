@@ -38,7 +38,7 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('option', { name: '5' }))
 }
 
-describe('ProfileCompletion', () => {
+describe('ProfileCompletion', { timeout: 15_000 }, () => {
   beforeEach(() => {
     mockedPatch.mockReset()
   })

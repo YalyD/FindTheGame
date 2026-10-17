@@ -19,7 +19,7 @@ export const rideOffersRouter = Router()
 const createBody = z.object({
   gameId: objectIdSchema,
   origin: z.string().trim().min(3).max(200),
-  seatsAvailable: z.number().int().min(1).max(8),
+  seatsAvailable: z.number().int().min(1).max(6),
 })
 
 const joinBody = z.object({ requestId: objectIdSchema })
@@ -259,7 +259,7 @@ rideOffersRouter.post(
 )
 
 const editBody = z.object({
-  seatsAvailable: z.number().int().min(1).max(8),
+  seatsAvailable: z.number().int().min(1).max(6),
 })
 
 rideOffersRouter.patch(

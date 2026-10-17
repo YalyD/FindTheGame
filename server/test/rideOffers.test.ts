@@ -50,6 +50,17 @@ describe('POST /api/ride-offers', () => {
     expect(res.status).toBe(400)
   })
 
+  it('rejects more than 6 seats with a validation error', async () => {
+    const u = await makeUser()
+    const game = await makeGame()
+    const res = await request(app)
+      .post('/api/ride-offers')
+      .set(u.authHeader)
+      .send({ gameId: game._id.toString(), origin: 'Pickup point', seatsAvailable: 7 })
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('validation_failed')
+  })
+
   it('rejects unauthenticated', async () => {
     const res = await request(app)
       .post('/api/ride-offers')
