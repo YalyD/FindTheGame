@@ -5,8 +5,6 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { COMMON } from '../../constants'
 import { formatGameDateLong } from '../../lib/date'
 
-// Highlighted game summary shown at the top of the create-request / create-offer
-// screens: matchup, kickoff time and venue.
 export function GameSummary({ game }: { game: Game }) {
   return (
     <Box sx={{ bgcolor: '#fff8e1', borderRadius: 2, p: 2, mb: 3, border: '1px solid #ffe082' }}>

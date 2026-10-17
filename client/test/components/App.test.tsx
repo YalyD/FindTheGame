@@ -8,7 +8,13 @@ vi.mock('../../src/pages/Main', () => ({
 vi.mock('../../src/pages/ProfileCompletion', () => ({
   ProfileCompletion: () => <div data-testid="profile">profile</div>,
 }))
-vi.mock('axios', () => ({ default: { post: vi.fn() } }))
+vi.mock('axios', () => ({
+  default: {
+    post: vi.fn(),
+    isAxiosError: vi.fn(),
+    interceptors: { response: { use: vi.fn(), eject: vi.fn() } },
+  },
+}))
 
 function storeAuth(auth: { token: string; name: string; profileComplete: boolean }) {
   localStorage.setItem('ftg_token', JSON.stringify(auth))

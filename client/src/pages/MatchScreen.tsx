@@ -10,31 +10,35 @@ interface Props {
   gameId: string
   requestId: string
   seatsNeeded: number
+  passengerOrigin: string
   token: string
   onDone: () => void
 }
 
-export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: Props) {
+export function MatchScreen({ gameId, requestId, seatsNeeded, passengerOrigin, token, onDone }: Props) {
   const [offers, setOffers] = useState<RideOffer[]>([])
   const [loading, setLoading] = useState(true)
   const [joiningId, setJoiningId] = useState<string | null>(null)
-  const [joinedId, setJoinedId] = useState<string | null>(null)
+  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api.rideOffers
-      .fetchForGame(token, gameId)
-      .then(setOffers)
+      .fetchForGame(token, gameId, passengerOrigin)
+      .then((fetched) => {
+        setOffers(fetched)
+        setRequestedIds(new Set(fetched.filter((o) => o.requested).map((o) => o._id)))
+      })
       .catch(() => setError(MATCH.errorLoadOffers))
       .finally(() => setLoading(false))
-  }, [gameId, token])
+  }, [gameId, passengerOrigin, token])
 
   async function handleJoin(offerId: string) {
     setJoiningId(offerId)
     setError(null)
     try {
       await api.rideOffers.join(token, offerId, requestId)
-      setJoinedId(offerId)
+      setRequestedIds((prev) => new Set([...prev, offerId]))
     } catch (err: unknown) {
       setError(apiErrorMessage(err, MATCH.errorJoin))
     } finally {
@@ -87,7 +91,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
                 seatsNeeded={seatsNeeded}
                 onJoin={handleJoin}
                 joining={joiningId === bestOffer._id}
-                joined={joinedId === bestOffer._id}
+                joined={requestedIds.has(bestOffer._id)}
               />
             </>
           )}
@@ -107,7 +111,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
                   seatsNeeded={seatsNeeded}
                   onJoin={handleJoin}
                   joining={joiningId === offer._id}
-                  joined={joinedId === offer._id}
+                  joined={requestedIds.has(offer._id)}
                 />
               ))}
             </>
@@ -116,7 +120,7 @@ export function MatchScreen({ gameId, requestId, seatsNeeded, token, onDone }: P
       )}
 
       <Button
-        variant={joinedId ? 'contained' : 'text'}
+        variant={requestedIds.size > 0 ? 'contained' : 'text'}
         fullWidth
         sx={{ mt: 3 }}
         onClick={onDone}

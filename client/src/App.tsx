@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import axios from 'axios'
 import { ProfileCompletion } from './pages/ProfileCompletion'
 import { Main } from './pages/Main'
 import { LoginPage } from './pages/LoginPage'
@@ -21,6 +22,16 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   const [googleReady, setGoogleReady] = useState(false)
   const btnRef = useRef<HTMLDivElement>(null)
+
+  // Tokens expire after 7 days; a stored one is never re-validated, so treat any
+  // 401 as a dead session and send the user back to login.
+  useEffect(() => {
+    const id = axios.interceptors.response.use(undefined, (err) => {
+      if (axios.isAxiosError(err) && err.response?.status === 401) logout()
+      return Promise.reject(err)
+    })
+    return () => axios.interceptors.response.eject(id)
+  }, [])
 
   useEffect(() => {
     if (auth) return
@@ -60,7 +71,6 @@ export function App() {
     if (typeof google !== 'undefined') {
       initGoogle()
     } else {
-      // GIS script loads async — wait for it
       const script = document.querySelector<HTMLScriptElement>(
         'script[src*="accounts.google.com/gsi/client"]',
       )

@@ -1,35 +1,21 @@
-// Estimates the round-trip fuel cost of a ride offer so it can be split
-// fairly between the driver and the passengers.
-//
-// consumption — fueleconomy.gov vehicle API (free, no key) by the driver's
-//   declared car make/model/year, with a default fallback when the model
-//   isn't found (Israeli-market models are only partially covered).
-// distance — Nominatim geocoding (origin + stadium) → OSRM public routing
-//   server for real driving distance.
-// price — FUEL_PRICE_ILS env var (₪ per liter, defaults to 7.3).
-//
-// Every external call is best-effort: any failure makes the whole estimate
-// return null, and the offer is simply created without a fuel cost.
 import { env } from './env.js'
+import { geocode, drivingDistanceKm } from './routing.js'
 
 export interface FuelCostEstimate {
   distanceKm: number
-  consumption: number // liters per 100 km
-  totalCost: number // ₪, round trip
+  consumption: number
+  totalCost: number
 }
 
 export interface CarInfo {
-  make: string
+  brand: string
   model: string
   year: number
 }
 
-// Used when the car model can't be matched in the vehicle database —
-// roughly the consumption of a typical compact family car.
 export const DEFAULT_CONSUMPTION = 7.5
 
-// Users type the make in Hebrew; the vehicle API speaks English.
-const HEBREW_MAKES: Record<string, string> = {
+const HEBREW_BRANDS: Record<string, string> = {
   'טויוטה': 'Toyota',
   'מאזדה': 'Mazda',
   'מזדה': 'Mazda',
@@ -55,27 +41,84 @@ const HEBREW_MAKES: Record<string, string> = {
   'טסלה': 'Tesla',
   'דאצ׳יה': 'Dacia',
   "דאצ'יה": 'Dacia',
+  'וולוו': 'Volvo',
+  'לקסוס': 'Lexus',
+  'סובארו': 'Subaru',
+  'מיני': 'MINI',
+  "ג'יפ": 'Jeep',
+  'אלפא רומיאו': 'Alfa Romeo',
+  'יגואר': 'Jaguar',
+  'לנד רובר': 'Land Rover',
+  "אם.ג'י": 'MG',
+  'בי.וי.די': 'BYD',
+  "צ'רי": 'Chery',
 }
 
-export function normalizeMake(make: string): string {
-  const trimmed = make.trim()
-  return HEBREW_MAKES[trimmed] ?? trimmed
+export const OTHER_BRAND = 'אחר'
+
+export function normalizeBrand(brand: string): string {
+  const trimmed = brand.trim()
+  return HEBREW_BRANDS[trimmed] ?? trimmed
 }
 
-// US fuel economy is reported in miles per gallon; convert to the metric
-// liters-per-100km used everywhere else (235.215 = 100 * km/mile * L/gallon).
+const KNOWN_BRANDS = new Set(Object.values(HEBREW_BRANDS))
+
+export function isKnownBrand(brand: string): boolean {
+  const trimmed = brand.trim()
+  return trimmed === OTHER_BRAND || KNOWN_BRANDS.has(normalizeBrand(trimmed))
+}
+
+const BRAND_TYPICAL_CONSUMPTION: Record<string, number> = {
+  Suzuki: 5.5,
+  Peugeot: 5.8,
+  Citroen: 5.9,
+  SEAT: 6.0,
+  Renault: 6.0,
+  Toyota: 6.0,
+  Skoda: 6.2,
+  Opel: 6.2,
+  Dacia: 6.2,
+  MINI: 6.2,
+  Honda: 6.3,
+  Mazda: 6.5,
+  Hyundai: 6.5,
+  Kia: 6.5,
+  Volkswagen: 6.5,
+  Nissan: 6.5,
+  Lexus: 6.5,
+  Ford: 6.8,
+  MG: 6.8,
+  Mitsubishi: 7.0,
+  Chery: 7.0,
+  Audi: 7.2,
+  BMW: 7.2,
+  Volvo: 7.2,
+  'Alfa Romeo': 7.2,
+  'Mercedes-Benz': 7.3,
+  Jaguar: 7.8,
+  Subaru: 7.8,
+  Chevrolet: 8.0,
+  Jeep: 8.5,
+  'Land Rover': 9.0,
+  Tesla: 2.5,
+  BYD: 3.0,
+}
+
+export function brandTypicalConsumption(brand: string): number | undefined {
+  return BRAND_TYPICAL_CONSUMPTION[normalizeBrand(brand)]
+}
+
 export function mpgToLitersPer100km(mpg: number): number {
   return Math.round((235.215 / mpg) * 10) / 10
 }
 
-// Round trip: distance there and back, liters consumed, times price per liter.
 export function calcTotalCost(
   distanceKm: number,
-  consumption: number,
+  litersPer100km: number,
   pricePerLiter: number,
 ): number {
-  const liters = (distanceKm * 2 * consumption) / 100
-  return Math.round(liters * pricePerLiter)
+  const roundTripLiters = (distanceKm * 2 * litersPer100km) / 100
+  return Math.round(roundTripLiters * pricePerLiter)
 }
 
 async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
@@ -84,10 +127,7 @@ async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'FindTheGame student project',
-      },
+      headers: { Accept: 'application/json', 'User-Agent': 'FindTheGame student project' },
     })
     if (!res.ok) throw new Error(`${url} responded ${res.status}`)
     return await res.json()
@@ -96,8 +136,6 @@ async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
   }
 }
 
-// fueleconomy.gov returns a single object instead of an array when a menu
-// has exactly one item.
 function firstMenuValue(data: unknown): string | null {
   const menu = (data as { menuItem?: unknown })?.menuItem
   if (Array.isArray(menu)) return menu[0]?.value ?? null
@@ -107,9 +145,9 @@ function firstMenuValue(data: unknown): string | null {
 
 export async function fetchCarConsumption(car: CarInfo): Promise<number | null> {
   try {
-    const make = encodeURIComponent(normalizeMake(car.make))
+    const brand = encodeURIComponent(normalizeBrand(car.brand))
     const model = encodeURIComponent(car.model.trim())
-    const optionsUrl = `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=${car.year}&make=${make}&model=${model}`
+    const optionsUrl = `https://www.fueleconomy.gov/ws/rest/vehicle/menu/options?year=${car.year}&make=${brand}&model=${model}`
     const vehicleId = firstMenuValue(await fetchJson(optionsUrl))
     if (!vehicleId) return null
 
@@ -119,36 +157,10 @@ export async function fetchCarConsumption(car: CarInfo): Promise<number | null> 
     const mpg = Number(vehicle?.comb08)
     if (!mpg || mpg <= 0) return null
 
-    const consumption = mpgToLitersPer100km(mpg)
-    // Sanity bounds — reject nonsense values rather than produce a wild cost.
-    if (consumption < 3 || consumption > 25) return null
-    return consumption
-  } catch {
-    return null
-  }
-}
-
-interface Coords {
-  lat: string
-  lon: string
-}
-
-async function geocode(query: string): Promise<Coords | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=il&limit=1`
-    const results = (await fetchJson(url)) as Coords[]
-    return results?.[0]?.lat ? results[0] : null
-  } catch {
-    return null
-  }
-}
-
-async function fetchDrivingDistanceKm(from: Coords, to: Coords): Promise<number | null> {
-  try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`
-    const data = (await fetchJson(url)) as { code?: string; routes?: { distance: number }[] }
-    if (data?.code !== 'Ok' || !data.routes?.[0]) return null
-    return Math.round(data.routes[0].distance / 100) / 10
+    const litersPer100km = mpgToLitersPer100km(mpg)
+    const isPlausible = litersPer100km >= 3 && litersPer100km <= 25
+    if (!isPlausible) return null
+    return litersPer100km
   } catch {
     return null
   }
@@ -161,22 +173,25 @@ export async function estimateOfferFuelCost(
   city: string,
 ): Promise<FuelCostEstimate | null> {
   try {
-    const consumptionPromise = car ? fetchCarConsumption(car) : Promise.resolve(null)
-    const [consumption, fromCoords, toCoords] = await Promise.all([
-      consumptionPromise,
+    const litersPer100kmPromise = car ? fetchCarConsumption(car) : Promise.resolve(null)
+    const [litersPer100km, fromCoords, toCoords] = await Promise.all([
+      litersPer100kmPromise,
       geocode(origin),
       geocode(`${stadium}, ${city}`).then((coords) => coords ?? geocode(city)),
     ])
     if (!fromCoords || !toCoords) return null
 
-    const distanceKm = await fetchDrivingDistanceKm(fromCoords, toCoords)
+    const distanceKm = await drivingDistanceKm(fromCoords, toCoords)
     if (!distanceKm) return null
 
-    const effectiveConsumption = consumption ?? DEFAULT_CONSUMPTION
+    const effectiveLitersPer100km =
+      litersPer100km ??
+      (car ? brandTypicalConsumption(car.brand) : undefined) ??
+      DEFAULT_CONSUMPTION
     return {
       distanceKm,
-      consumption: effectiveConsumption,
-      totalCost: calcTotalCost(distanceKm, effectiveConsumption, env().FUEL_PRICE_ILS),
+      consumption: effectiveLitersPer100km,
+      totalCost: calcTotalCost(distanceKm, effectiveLitersPer100km, env().FUEL_PRICE_ILS),
     }
   } catch {
     return null

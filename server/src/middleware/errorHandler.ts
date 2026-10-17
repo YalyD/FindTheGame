@@ -22,13 +22,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return
   }
 
-  // Mongoose CastError (invalid ObjectId arriving via a query, etc.)
   if (typeof err === 'object' && err !== null && (err as { name?: string }).name === 'CastError') {
     res.status(400).json({ error: 'invalid_id' })
     return
   }
 
-  // Errors thrown by Express middleware (body-parser too-large, etc.) carry a status.
   if (typeof err === 'object' && err !== null && typeof (err as { status?: number }).status === 'number') {
     const e = err as { status: number; type?: string; message?: string }
     res.status(e.status).json({ error: e.type || e.message || 'request_error' })

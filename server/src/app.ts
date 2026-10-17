@@ -17,14 +17,10 @@ export function createApp() {
   const app = express()
   const { CLIENT_ORIGIN } = env()
 
-  // X-Forwarded-* headers from nginx; required for rate-limiter IP detection in prod
   app.set('trust proxy', 1)
 
   app.use(
     helmet({
-      // The frontend is served from a separate origin in dev (Vite) and proxied
-      // by nginx in prod, so CSP is set at the nginx layer. Disable here to
-      // avoid blocking the React app during dev.
       contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
     }),

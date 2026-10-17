@@ -1,31 +1,31 @@
-import { MenuItem, Stack, TextField, Typography } from '@mui/material'
-import { PROFILE } from '../../constants'
+import { Autocomplete, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { CAR_BRANDS, PROFILE } from '../../constants'
 
 const SEAT_OPTIONS = [2, 3, 4, 5, 6, 7]
 
 interface Props {
-  make: string
+  brand: string
   model: string
   year: string
   seats: string
-  onMakeChange: (value: string) => void
+  onBrandChange: (value: string) => void
   onModelChange: (value: string) => void
   onYearChange: (value: string) => void
   onSeatsChange: (value: string) => void
 }
 
-// Car make / model / year / seats inputs used in the profile form.
 export function CarDetailsFields({
-  make,
+  brand,
   model,
   year,
   seats,
-  onMakeChange,
+  onBrandChange,
   onModelChange,
   onYearChange,
   onSeatsChange,
 }: Props) {
   const currentYear = new Date().getFullYear()
+  const brandValue = brand && CAR_BRANDS.includes(brand) ? brand : null
 
   return (
     <>
@@ -34,13 +34,21 @@ export function CarDetailsFields({
       </Typography>
 
       <Stack direction="row" spacing={2}>
-        <TextField
-          label={PROFILE.make}
-          value={make}
-          onChange={(e) => onMakeChange(e.target.value)}
+        <Autocomplete
           fullWidth
-          required
-          placeholder={PROFILE.makePlaceholder}
+          options={CAR_BRANDS}
+          value={brandValue}
+          onChange={(_e, val) => onBrandChange(val ?? '')}
+          noOptionsText={PROFILE.brandNoResults}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={PROFILE.brand}
+              required
+              placeholder={PROFILE.brandPlaceholder}
+              helperText={PROFILE.brandHelper}
+            />
+          )}
         />
         <TextField
           label={PROFILE.model}

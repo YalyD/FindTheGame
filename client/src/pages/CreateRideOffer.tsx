@@ -12,35 +12,63 @@ import {
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 import { useState } from 'react'
 import { AddressFields } from '../components/address/AddressFields'
+import { PhoneField } from '../components/profile/PhoneField'
 import { GameSummary } from '../components/game/GameSummary'
 import { COMMON, CREATE_OFFER } from '../constants'
 import { api, apiErrorMessage } from '../apiHandler'
+import { useProfilePrefill } from '../hooks/useProfilePrefill'
 
 interface Props {
   game: Game
   token: string
   onSuccess: () => void
   onCancel: () => void
+  mode?: 'create' | 'edit'
+  offerId?: string
+  initialOrigin?: string
+  initialSeats?: number
 }
 
-export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
-  const [origin, setOrigin] = useState('')
-  const [seatsAvailable, setSeatsAvailable] = useState('2')
+export function CreateRideOffer({
+  game,
+  token,
+  onSuccess,
+  onCancel,
+  mode = 'create',
+  offerId,
+  initialOrigin,
+  initialSeats,
+}: Props) {
+  const isEdit = mode === 'edit'
+  const [origin, setOrigin] = useState(initialOrigin ?? '')
+  const [seatsAvailable, setSeatsAvailable] = useState(
+    initialSeats && initialSeats >= 1 ? initialSeats.toString() : '2',
+  )
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const { phone, setPhone, phoneValid, savePhone } = useProfilePrefill(token)
 
-  const isValid = origin.trim().length > 2 && Number(seatsAvailable) >= 1
+  const isValid = isEdit
+    ? Number(seatsAvailable) >= 1
+    : origin.trim().length > 2 && Number(seatsAvailable) >= 1 && phoneValid
 
   async function handleSubmit() {
     if (!isValid) return
     setLoading(true)
     setError(null)
     try {
-      await api.rideOffers.create(token, {
-        gameId: game._id,
-        origin,
-        seatsAvailable: Number(seatsAvailable),
-      })
+      if (isEdit && offerId) {
+        await api.rideOffers.update(token, offerId, {
+          seatsAvailable: Number(seatsAvailable),
+        })
+      } else {
+        await savePhone()
+        await api.rideOffers.create(token, {
+          gameId: game._id,
+          origin,
+          seatsAvailable: Number(seatsAvailable),
+        })
+      }
       onSuccess()
     } catch (err: unknown) {
       setError(apiErrorMessage(err, CREATE_OFFER.error))
@@ -55,7 +83,7 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
           <DirectionsCarIcon color="primary" />
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {CREATE_OFFER.heading}
+            {isEdit ? CREATE_OFFER.editHeading : CREATE_OFFER.heading}
           </Typography>
         </Stack>
 
@@ -64,12 +92,16 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
         <Divider sx={{ mb: 3 }} />
 
         <Stack spacing={3}>
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              {CREATE_OFFER.origin}
-            </Typography>
-            <AddressFields onChange={setOrigin} />
-          </Box>
+          {!isEdit && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                {CREATE_OFFER.origin}
+              </Typography>
+              <AddressFields onChange={setOrigin} initialValue={initialOrigin} />
+            </Box>
+          )}
+
+          {!isEdit && <PhoneField value={phone} valid={phoneValid} onChange={setPhone} />}
 
           <TextField
             select
@@ -98,7 +130,11 @@ export function CreateRideOffer({ game, token, onSuccess, onCancel }: Props) {
               {COMMON.cancel}
             </Button>
             <Button variant="contained" onClick={handleSubmit} disabled={!isValid || loading}>
-              {loading ? CREATE_OFFER.submitting : CREATE_OFFER.submit}
+              {loading
+                ? CREATE_OFFER.submitting
+                : isEdit
+                  ? CREATE_OFFER.saveChanges
+                  : CREATE_OFFER.submit}
             </Button>
           </Stack>
         </Stack>

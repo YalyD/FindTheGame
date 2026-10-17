@@ -11,7 +11,9 @@ import {
 import { useEffect, useState } from 'react'
 import { AddressFields } from '../components/address/AddressFields'
 import { CarDetailsFields } from '../components/profile/CarDetailsFields'
-import { ISRAELI_TEAMS, PROFILE, COMMON } from '../constants'
+import { CAR_BRANDS, ISRAELI_TEAMS, PROFILE, COMMON } from '../constants'
+import PhoneIcon from '@mui/icons-material/Phone'
+import InputAdornment from '@mui/material/InputAdornment'
 import { api } from '../apiHandler'
 
 interface Props {
@@ -31,29 +33,33 @@ export function ProfileCompletion({
 }: Props) {
   const [favoriteTeam, setFavoriteTeam] = useState(initialProfile?.favoriteTeam ?? '')
   const [address, setAddress] = useState(initialProfile?.address ?? '')
-  const [carMake, setCarMake] = useState(initialProfile?.car?.make ?? '')
+  const [phone, setPhone] = useState(initialProfile?.phone ?? '')
+  const knownBrand = (b?: string) => (b && CAR_BRANDS.includes(b) ? b : '')
+  const [carBrand, setCarBrand] = useState(knownBrand(initialProfile?.car?.brand))
   const [carModel, setCarModel] = useState(initialProfile?.car?.model ?? '')
   const [carYear, setCarYear] = useState(initialProfile?.car?.year?.toString() ?? '')
   const [carSeats, setCarSeats] = useState(initialProfile?.car?.seats?.toString() ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Re-sync if initialProfile arrives after mount (parent fetches it async).
   useEffect(() => {
     if (!initialProfile) return
     setFavoriteTeam(initialProfile.favoriteTeam ?? '')
     setAddress(initialProfile.address ?? '')
-    setCarMake(initialProfile.car?.make ?? '')
+    setPhone(initialProfile.phone ?? '')
+    setCarBrand(knownBrand(initialProfile.car?.brand))
     setCarModel(initialProfile.car?.model ?? '')
     setCarYear(initialProfile.car?.year?.toString() ?? '')
     setCarSeats(initialProfile.car?.seats?.toString() ?? '')
   }, [initialProfile])
 
   const currentYear = new Date().getFullYear()
+  const phoneValid = phone.trim() === '' || /^0(5\d|[2-489])[-\s]?\d{7}$/.test(phone.trim())
   const isValid =
     favoriteTeam &&
     address.trim() &&
-    carMake.trim() &&
+    phoneValid &&
+    carBrand.trim() &&
     carModel.trim() &&
     Number(carYear) >= 1990 &&
     Number(carYear) <= currentYear + 1 &&
@@ -67,8 +73,9 @@ export function ProfileCompletion({
       const newToken = await api.users.updateProfile(token, {
         favoriteTeam,
         address,
+        phone: phone.trim() || undefined,
         car: {
-          make: carMake,
+          brand: carBrand,
           model: carModel,
           year: Number(carYear),
           seats: Number(carSeats),
@@ -112,12 +119,30 @@ export function ProfileCompletion({
 
           <AddressFields onChange={setAddress} initialValue={initialProfile?.address} />
 
+          <TextField
+            label={PROFILE.phone}
+            placeholder={PROFILE.phonePlaceholder}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            fullWidth
+            error={!phoneValid}
+            inputProps={{ dir: 'ltr' }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PhoneIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            helperText={phoneValid ? PROFILE.phoneHelper : PROFILE.phoneInvalid}
+          />
+
           <CarDetailsFields
-            make={carMake}
+            brand={carBrand}
             model={carModel}
             year={carYear}
             seats={carSeats}
-            onMakeChange={setCarMake}
+            onBrandChange={setCarBrand}
             onModelChange={setCarModel}
             onYearChange={setCarYear}
             onSeatsChange={setCarSeats}

@@ -41,7 +41,6 @@ export function NotificationsBell({ token }: Props) {
     refetchOnWindowFocus: true,
   })
 
-  // Refresh badge when a push arrives (service worker posts PUSH_RECEIVED)
   useEffect(() => {
     function onSwMessage(event: MessageEvent) {
       if (event.data?.type === 'PUSH_RECEIVED') {

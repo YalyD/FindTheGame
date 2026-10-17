@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { AddressFields } from '../../src/components/address/AddressFields'
 
 const reverseGeocode = {
-  address: { road: 'הרצל', house_number: '5', city: 'תל אביב' },
+  address: { road: 'הרצל', house_number: '5', city: 'תל אביב', country_code: 'il' },
 }
 
 function setGeolocation(
@@ -46,6 +46,27 @@ describe('AddressFields — current location', () => {
       expect.anything(),
     )
     expect(screen.getByDisplayValue('תל אביב')).toBeInTheDocument()
+  })
+
+  it('rejects a position that resolves outside Israel', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ address: { road: 'National Rd. D-61', city: 'בואאה', country_code: 'cm' } }),
+      })) as unknown as typeof fetch,
+    )
+    setGeolocation((success) =>
+      success({ coords: { latitude: 4.15, longitude: 9.24 } } as GeolocationPosition),
+    )
+    const onChange = vi.fn()
+    render(<AddressFields onChange={onChange} />)
+
+    await user.click(screen.getByRole('button', { name: /מיקום/ }))
+
+    expect(await screen.findByText(/מחוץ לישראל/)).toBeInTheDocument()
+    expect(onChange).not.toHaveBeenCalledWith(expect.stringContaining('בואאה'))
   })
 
   it('warns when the browser denies location permission', async () => {

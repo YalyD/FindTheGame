@@ -10,9 +10,12 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import { AddressFields } from '../components/address/AddressFields'
+import { PhoneField } from '../components/profile/PhoneField'
 import { GameSummary } from '../components/game/GameSummary'
+import { LoadingCards } from '../components/shared/LoadingCards'
 import { COMMON, CREATE_REQUEST } from '../constants'
 import { api, apiErrorMessage } from '../apiHandler'
+import { useProfilePrefill } from '../hooks/useProfilePrefill'
 
 interface Props {
   game: Game
@@ -26,14 +29,16 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
   const [seatsNeeded, setSeatsNeeded] = useState('1')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const { phone, setPhone, phoneValid, savePhone, address, loaded } = useProfilePrefill(token)
 
-  const isValid = origin.trim().length > 2 && Number(seatsNeeded) >= 1
+  const isValid = origin.trim().length > 2 && Number(seatsNeeded) >= 1 && phoneValid
 
   async function handleSubmit() {
     if (!isValid) return
     setLoading(true)
     setError(null)
     try {
+      await savePhone()
       const created = await api.rideRequests.create(token, {
         gameId: game._id,
         origin,
@@ -59,7 +64,13 @@ export function CreateRideRequest({ game, token, onSuccess, onCancel }: Props) {
         <Divider sx={{ mb: 3 }} />
 
         <Stack spacing={3}>
-          <AddressFields onChange={setOrigin} />
+          {loaded ? (
+            <AddressFields onChange={setOrigin} initialValue={address} />
+          ) : (
+            <LoadingCards count={1} height={120} />
+          )}
+
+          <PhoneField value={phone} valid={phoneValid} onChange={setPhone} />
 
           <TextField
             select

@@ -27,9 +27,9 @@ rideRequestsRouter.post(
     const existing = await RideRequest.findOne({
       game: gameId,
       passenger: req.user!.userId,
-      status: 'open',
+      status: { $in: ['open', 'matched'] },
     })
-    if (existing) throw new HttpError(409, 'כבר קיימת בקשה פתוחה למשחק זה')
+    if (existing) throw new HttpError(409, 'כבר קיימת לך בקשת נסיעה למשחק זה')
 
     const request = await RideRequest.create({
       game: gameId,
@@ -45,6 +45,11 @@ rideRequestsRouter.post(
 rideRequestsRouter.get('/mine', requireAuth, async (req: AuthRequest, res: Response) => {
   const requests = await RideRequest.find({ passenger: req.user!.userId })
     .populate('game')
+    .populate({
+      path: 'matchedOffer',
+      select: 'origin fuelCost driver',
+      populate: { path: 'driver', select: 'name picture phone car' },
+    })
     .sort({ createdAt: -1 })
   res.json(requests)
 })

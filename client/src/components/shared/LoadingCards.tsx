@@ -5,7 +5,6 @@ interface Props {
   height?: number
 }
 
-// Placeholder skeleton cards shown while a list is loading.
 export function LoadingCards({ count = 2, height = 150 }: Props) {
   return (
     <Stack spacing={2}>

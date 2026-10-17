@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import { loadEnv } from './lib/env.js'
 
-// Validate env BEFORE any other module (especially routes) reads process.env.
 const env = loadEnv()
 
 const { createApp } = await import('./app.js')

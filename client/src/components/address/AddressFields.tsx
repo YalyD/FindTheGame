@@ -9,8 +9,6 @@ interface Props {
   initialValue?: string
 }
 
-// Parse "Street House, City" back into the three structured fields.
-// Tolerant — returns whatever it can recover.
 export function parseAddress(stored: string): { city: string; street: string; houseNumber: string } {
   const empty = { city: '', street: '', houseNumber: '' }
   if (!stored) return empty
@@ -18,7 +16,6 @@ export function parseAddress(stored: string): { city: string; street: string; ho
   if (parts.length < 2) return empty
   const city = parts.slice(1).join(',').trim()
   const streetAndHouse = parts[0].trim()
-  // House number is the trailing whitespace-separated token if it looks numeric.
   const m = streetAndHouse.match(/^(.*?)\s+(\d+[\wא-ת]*)$/)
   if (m) return { city, street: m[1].trim(), houseNumber: m[2].trim() }
   return { city, street: streetAndHouse, houseNumber: '' }
@@ -44,7 +41,6 @@ export function AddressFields({ onChange, initialValue }: Props) {
   const cityDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const streetDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // If the parent ever supplies a non-empty initialValue, propagate it once on mount.
   useEffect(() => {
     if (initial.city && initial.street && initial.houseNumber) {
       onChange(`${initial.street} ${initial.houseNumber}, ${initial.city}`)
@@ -113,6 +109,11 @@ export function AddressFields({ onChange, initialValue }: Props) {
       })
       const { latitude, longitude } = pos.coords
       const address = await reverseGeocode(latitude, longitude)
+      // Desktop Wi-Fi positioning can be wildly off; manual search is Israel-only too
+      if (address?.country_code !== 'il') {
+        setGeoError(ADDRESS_FIELDS.geoOutsideIsrael)
+        return
+      }
       const newCity = cityName(address)
       const newStreet = address?.road ?? ''
       const newHouse = address?.house_number ?? ''
@@ -237,7 +238,7 @@ export function AddressFields({ onChange, initialValue }: Props) {
           sx={{ width: 120 }}
         />
       </Stack>
-      <Box sx={{ display: 'none' }}>{/* spacer */}</Box>
+      <Box sx={{ display: 'none' }}></Box>
     </Stack>
   )
 }

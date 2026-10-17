@@ -17,10 +17,11 @@ interface Props {
   game: Game
   onRequestRide: (game: Game) => void
   onOfferRide: (game: Game) => void
+  hasOpenRequest: boolean
+  hasOpenOffer: boolean
 }
 
-// One upcoming game in the Main list, with request/offer actions.
-export function GameCard({ game, onRequestRide, onOfferRide }: Props) {
+export function GameCard({ game, onRequestRide, onOfferRide, hasOpenRequest, hasOpenOffer }: Props) {
   return (
     <Card>
       <CardContent>
@@ -51,11 +52,23 @@ export function GameCard({ game, onRequestRide, onOfferRide }: Props) {
         </Stack>
         <Divider sx={{ my: 1.5 }} />
         <Stack direction="row" spacing={1}>
-          <Button variant="contained" size="small" fullWidth onClick={() => onRequestRide(game)}>
-            {MAIN.requestRide}
+          <Button
+            variant="contained"
+            size="small"
+            fullWidth
+            onClick={() => onRequestRide(game)}
+            disabled={hasOpenRequest}
+          >
+            {hasOpenRequest ? MAIN.requestExists : MAIN.requestRide}
           </Button>
-          <Button variant="outlined" size="small" fullWidth onClick={() => onOfferRide(game)}>
-            {MAIN.offerRide}
+          <Button
+            variant="outlined"
+            size="small"
+            fullWidth
+            onClick={() => onOfferRide(game)}
+            disabled={hasOpenOffer}
+          >
+            {hasOpenOffer ? MAIN.offerExists : MAIN.offerRide}
           </Button>
         </Stack>
       </CardContent>

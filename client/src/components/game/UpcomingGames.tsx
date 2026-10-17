@@ -12,9 +12,10 @@ interface Props {
   onRefresh: () => void
   onRequestRide: (game: Game) => void
   onOfferRide: (game: Game) => void
+  openRequestGameIds: Set<string>
+  openOfferGameIds: Set<string>
 }
 
-// The upcoming-games list with its header, refresh control and empty/loading states.
 export function UpcomingGames({
   games,
   loading,
@@ -23,6 +24,8 @@ export function UpcomingGames({
   onRefresh,
   onRequestRide,
   onOfferRide,
+  openRequestGameIds,
+  openOfferGameIds,
 }: Props) {
   return (
     <Container maxWidth="sm" sx={{ py: 3 }}>
@@ -86,6 +89,8 @@ export function UpcomingGames({
               game={game}
               onRequestRide={onRequestRide}
               onOfferRide={onOfferRide}
+              hasOpenRequest={openRequestGameIds.has(String(game._id))}
+              hasOpenOffer={openOfferGameIds.has(String(game._id))}
             />
           ))
         )}

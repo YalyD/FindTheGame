@@ -1,7 +1,5 @@
 import { createTheme } from '@mui/material'
 
-// App-wide MUI theme: RTL, the orange/amber brand palette, Heebo typography,
-// and per-component style overrides (gradient AppBar/buttons, rounded cards).
 export const theme = createTheme({
   direction: 'rtl',
   palette: {

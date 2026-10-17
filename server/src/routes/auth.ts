@@ -54,7 +54,7 @@ authRouter.post(
       { upsert: true, new: true },
     )
 
-    const profileComplete = Boolean(user.favoriteTeam && user.address && user.car?.make)
+    const profileComplete = Boolean(user.favoriteTeam && user.address && user.car?.brand)
 
     const token = jwt.sign(
       { userId: user._id.toString(), profileComplete },

@@ -1,6 +1,3 @@
-// Hebrew date formatting for game start times.
-
-// Compact form for dense lists (e.g. "ב׳, 5.7, 19:00").
 export function formatGameDateShort(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('he-IL', {
     weekday: 'short',
@@ -11,7 +8,6 @@ export function formatGameDateShort(dateStr: string) {
   })
 }
 
-// Spelled-out form for single-game detail screens.
 export function formatGameDateLong(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('he-IL', {
     weekday: 'long',

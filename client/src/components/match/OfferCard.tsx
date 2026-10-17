@@ -14,11 +14,8 @@ interface Props {
   joined: boolean
 }
 
-// A driver's ride offer on the match screen, with a join action.
 export function OfferCard({ offer, isBest, seatsNeeded, onJoin, joining, joined }: Props) {
   const hasEnough = offer.seatsAvailable >= seatsNeeded
-  // Equal split between everyone in the car if this user joins:
-  // driver + passengers already in + this user.
   const fuelShare = offer.fuelCost
     ? Math.round(offer.fuelCost.totalCost / (offer.passengers.length + 2))
     : null

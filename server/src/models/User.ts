@@ -7,8 +7,9 @@ export interface IUser extends Document {
   picture: string
   favoriteTeam?: string
   address?: string
+  phone?: string
   car?: {
-    make: string
+    brand: string
     model: string
     year: number
     seats: number
@@ -23,8 +24,9 @@ const userSchema = new Schema<IUser>(
     picture: { type: String, default: '' },
     favoriteTeam: { type: String },
     address: { type: String },
+    phone: { type: String },
     car: {
-      make: { type: String },
+      brand: { type: String },
       model: { type: String },
       year: { type: Number },
       seats: { type: Number },

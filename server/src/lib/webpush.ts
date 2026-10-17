@@ -16,7 +16,6 @@ export async function sendPushToUser(userId: string, payload: { title: string; b
       webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(payload)),
     ),
   )
-  // Clean up expired subscriptions (410 Gone / 404 Not Found)
   for (let i = 0; i < results.length; i++) {
     const r = results[i]
     if (r.status === 'rejected') {

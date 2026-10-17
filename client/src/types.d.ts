@@ -1,8 +1,3 @@
-// Ambient type declarations — these are global, so no import is needed
-// to use them anywhere in the client.
-
-// ---- Domain ----
-
 interface Game {
   _id: string
   homeTeam: string
@@ -10,7 +5,6 @@ interface Game {
   date: string
   stadium: string
   city: string
-  // Only the games list (Main) carries a competition label.
   competition?: string
 }
 
@@ -18,7 +12,11 @@ interface Passenger {
   _id: string
   name: string
   picture: string
+  phone: string
+  origin: string
 }
+
+type PendingPassenger = Passenger
 
 interface Driver {
   _id: string
@@ -26,45 +24,56 @@ interface Driver {
   picture: string
 }
 
-// A ride request with its game populated by the server.
+interface MatchedDriver {
+  _id: string
+  name: string
+  picture: string
+  phone: string
+  car: CarDetails | null
+}
+
+interface MatchedOffer {
+  _id: string
+  origin: string
+  fuelCost?: FuelCost | null
+  driver: MatchedDriver
+}
+
 interface PopulatedRequest {
   _id: string
   game: Game
   origin: string
   seatsNeeded: number
   status: 'open' | 'matched' | 'cancelled'
+  matchedOffer?: MatchedOffer | null
 }
 
-// Estimated round-trip fuel cost of an offer, computed by the server at
-// creation. null when the estimate failed (unknown address, API down, ...).
 interface FuelCost {
   distanceKm: number
   consumption: number
   totalCost: number
 }
 
-// A ride offer with its game and passengers populated by the server.
 interface PopulatedOffer {
   _id: string
   game: Game
   origin: string
   seatsAvailable: number
   passengers: Passenger[]
+  pendingPassengers: PendingPassenger[]
   status: 'open' | 'full' | 'cancelled' | 'closed'
   fuelCost?: FuelCost | null
 }
 
-// A ride offer as shown on the match screen, with its driver populated.
 interface RideOffer {
   _id: string
   driver: Driver
   origin: string
   seatsAvailable: number
   passengers: string[]
+  requested: boolean
   fuelCost?: FuelCost | null
 }
-
-// ---- FindTheGame API ----
 
 interface AuthState {
   token: string
@@ -73,7 +82,7 @@ interface AuthState {
 }
 
 interface CarDetails {
-  make: string
+  brand: string
   model: string
   year: number
   seats: number
@@ -82,17 +91,20 @@ interface CarDetails {
 interface ProfileSnapshot {
   favoriteTeam: string
   address: string
+  phone: string
   car: CarDetails | null
 }
 
 interface ProfileUpdate {
   favoriteTeam: string
   address: string
+  phone?: string
   car: CarDetails
 }
 
 interface CreatedRequest {
   _id: string
+  origin: string
   seatsNeeded: number
 }
 
@@ -103,8 +115,6 @@ interface INotification {
   createdAt: string
 }
 
-// ---- Nominatim geocoding service ----
-
 interface NominatimAddress {
   city?: string
   town?: string
@@ -113,10 +123,13 @@ interface NominatimAddress {
   municipality?: string
   road?: string
   house_number?: string
+  country_code?: string
 }
 
 interface NominatimResult {
   place_id: number
   display_name: string
+  lat: string
+  lon: string
   address?: NominatimAddress
 }

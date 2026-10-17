@@ -5,7 +5,6 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import { ACTIVITY, COMMON } from '../../constants'
 import { formatGameDateShort } from '../../lib/date'
 
-// Compact game header used inside activity cards. Tolerates a deleted game.
 export function GameInfo({ game }: { game: Game | null }) {
   if (!game) {
     return (

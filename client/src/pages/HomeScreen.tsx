@@ -17,6 +17,9 @@ interface Props {
   onRefresh: () => void
   onRequestRide: (game: Game) => void
   onOfferRide: (game: Game) => void
+  onViewOffers: (req: PopulatedRequest) => void
+  openRequestGameIds: Set<string>
+  openOfferGameIds: Set<string>
   toast: string | null
   onToastClose: () => void
 }
@@ -35,6 +38,9 @@ export function HomeScreen({
   onRefresh,
   onRequestRide,
   onOfferRide,
+  onViewOffers,
+  openRequestGameIds,
+  openOfferGameIds,
   toast,
   onToastClose,
 }: Props) {
@@ -57,7 +63,7 @@ export function HomeScreen({
 
       {view === 'activity' ? (
         <Container maxWidth="sm" sx={{ py: 2 }}>
-          <MyActivity token={token} />
+          <MyActivity token={token} onViewOffers={onViewOffers} />
         </Container>
       ) : (
         <UpcomingGames
@@ -68,6 +74,8 @@ export function HomeScreen({
           onRefresh={onRefresh}
           onRequestRide={onRequestRide}
           onOfferRide={onOfferRide}
+          openRequestGameIds={openRequestGameIds}
+          openOfferGameIds={openOfferGameIds}
         />
       )}
 

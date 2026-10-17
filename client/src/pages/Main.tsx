@@ -21,9 +21,11 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [openRequestGameIds, setOpenRequestGameIds] = useState<Set<string>>(new Set())
+  const [openOfferGameIds, setOpenOfferGameIds] = useState<Set<string>>(new Set())
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
   const [offerGame, setOfferGame] = useState<Game | null>(null)
-  const [matchState, setMatchState] = useState<{ gameId: string; requestId: string; seatsNeeded: number } | null>(null)
+  const [matchState, setMatchState] = useState<{ gameId: string; requestId: string; seatsNeeded: number; passengerOrigin: string } | null>(null)
   const [view, setView] = useState<'main' | 'activity'>(
     () => (localStorage.getItem('ftg_view') === 'activity' ? 'activity' : 'main'),
   )
@@ -45,6 +47,7 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
     async (mode: 'initial' | 'refresh') => {
       if (mode === 'refresh') setRefreshing(true)
       setError(null)
+
       try {
         setGames(await api.games.fetchAll(token))
       } catch {
@@ -53,6 +56,32 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         if (mode === 'initial') setLoading(false)
         else setRefreshing(false)
       }
+
+      api.rideRequests
+        .fetchMine(token)
+        .then((requests) =>
+          setOpenRequestGameIds(
+            new Set(
+              requests
+                .filter((r) => (r.status === 'open' || r.status === 'matched') && r.game?._id)
+                .map((r) => String(r.game._id)),
+            ),
+          ),
+        )
+        .catch(() => {})
+
+      api.rideOffers
+        .fetchMine(token)
+        .then((offers) =>
+          setOpenOfferGameIds(
+            new Set(
+              offers
+                .filter((o) => o.status !== 'cancelled' && o.game?._id)
+                .map((o) => String(o.game._id)),
+            ),
+          ),
+        )
+        .catch(() => {})
     },
     [token],
   )
@@ -67,7 +96,8 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         game={selectedGame}
         token={token}
         onSuccess={(req) => {
-          setMatchState({ gameId: selectedGame._id, requestId: req._id, seatsNeeded: req.seatsNeeded })
+          setOpenRequestGameIds((prev) => new Set([...prev, selectedGame._id]))
+          setMatchState({ gameId: selectedGame._id, requestId: req._id, seatsNeeded: req.seatsNeeded, passengerOrigin: req.origin })
           setSelectedGame(null)
         }}
         onCancel={() => setSelectedGame(null)}
@@ -81,10 +111,12 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         gameId={matchState.gameId}
         requestId={matchState.requestId}
         seatsNeeded={matchState.seatsNeeded}
+        passengerOrigin={matchState.passengerOrigin}
         token={token}
         onDone={() => {
           setMatchState(null)
           setToast(MAIN.toastRequestSaved)
+          loadGames('refresh')
         }}
       />
     )
@@ -96,8 +128,10 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
         game={offerGame}
         token={token}
         onSuccess={() => {
+          setOpenOfferGameIds((prev) => new Set([...prev, offerGame._id]))
           setOfferGame(null)
           setToast(MAIN.toastOfferPublished)
+          loadGames('refresh')
         }}
         onCancel={() => setOfferGame(null)}
       />
@@ -125,7 +159,10 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
       token={token}
       name={name}
       view={view}
-      onSelectView={setView}
+      onSelectView={(v) => {
+        setView(v)
+        if (v === 'main') loadGames('refresh')
+      }}
       onEditProfile={openProfileEdit}
       onLogout={onLogout}
       games={games}
@@ -135,6 +172,9 @@ export function Main({ token, name, onLogout, onProfileUpdated }: Props) {
       onRefresh={() => loadGames('refresh')}
       onRequestRide={setSelectedGame}
       onOfferRide={setOfferGame}
+      onViewOffers={(req) => setMatchState({ gameId: req.game._id, requestId: req._id, seatsNeeded: req.seatsNeeded, passengerOrigin: req.origin })}
+      openRequestGameIds={openRequestGameIds}
+      openOfferGameIds={openOfferGameIds}
       toast={toast}
       onToastClose={() => setToast(null)}
     />

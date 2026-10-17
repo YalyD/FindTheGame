@@ -27,7 +27,6 @@ interface Props {
   onLogout: () => void
 }
 
-// Sticky top bar: brand, view switcher, notifications and the account menu.
 export function AppHeader({ name, token, view, onSelectView, onEditProfile, onLogout }: Props) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
 
