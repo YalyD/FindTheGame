@@ -1,12 +1,6 @@
 import { Router } from 'express'
-import { dbStatus } from '../db.js'
+import * as healthController from '../controllers/healthController.js'
 
 export const healthRouter = Router()
 
-healthRouter.get('/', (_req, res) => {
-  res.json({
-    status: 'ok',
-    db: dbStatus(),
-    uptime: process.uptime(),
-  })
-})
+healthRouter.get('/', healthController.getHealth)

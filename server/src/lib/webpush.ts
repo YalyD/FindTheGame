@@ -1,7 +1,6 @@
 import webpush from 'web-push'
-import mongoose from 'mongoose'
 import { env } from './env.js'
-import { PushSubscription } from '../models/PushSubscription.js'
+import * as pushSubscriptionRepository from '../repositories/pushSubscriptionRepository.js'
 
 export function initWebPush() {
   const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL } = env()
@@ -10,7 +9,7 @@ export function initWebPush() {
 }
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string }) {
-  const subs = await PushSubscription.find({ user: new mongoose.Types.ObjectId(userId) })
+  const subs = await pushSubscriptionRepository.findByUser(userId)
   const results = await Promise.allSettled(
     subs.map((sub) =>
       webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, JSON.stringify(payload)),
