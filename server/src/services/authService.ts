@@ -2,7 +2,7 @@ import { OAuth2Client } from 'google-auth-library'
 import jwt from 'jsonwebtoken'
 import { IUser } from '../models/User.js'
 import { env } from '../lib/env.js'
-import { HttpError } from '../middleware/errorHandler.js'
+import { HttpError } from '../lib/errors.js'
 import * as userRepository from '../repositories/userRepository.js'
 
 let _googleClient: OAuth2Client | null = null

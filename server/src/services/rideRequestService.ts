@@ -1,4 +1,4 @@
-import { HttpError } from '../middleware/errorHandler.js'
+import { HttpError } from '../lib/errors.js'
 import * as rideRequestRepository from '../repositories/rideRequestRepository.js'
 import { CreateRequestBody } from '../validators/rideRequests.js'
 

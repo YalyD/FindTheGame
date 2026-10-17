@@ -1,4 +1,4 @@
-import { HttpError } from '../middleware/errorHandler.js'
+import { HttpError } from '../lib/errors.js'
 import * as userRepository from '../repositories/userRepository.js'
 import { issueToken } from './authService.js'
 import { ProfileBody } from '../validators/users.js'

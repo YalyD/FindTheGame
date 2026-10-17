@@ -1,4 +1,4 @@
-import { HttpError } from '../middleware/errorHandler.js'
+import { HttpError } from '../lib/errors.js'
 import { estimateOfferFuelCost } from '../lib/fuelCost.js'
 import { geocode, drivingDistanceKm } from '../lib/routing.js'
 import { IRideOffer } from '../models/RideOffer.js'

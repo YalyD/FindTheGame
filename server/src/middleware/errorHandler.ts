@@ -1,13 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { env } from '../lib/env.js'
-
-export class HttpError extends Error {
-  status: number
-  constructor(status: number, message: string) {
-    super(message)
-    this.status = status
-  }
-}
+import { HttpError } from '../lib/errors.js'
 
 export function notFoundHandler(_req: Request, res: Response) {
   res.status(404).json({ error: 'not_found' })
@@ -24,6 +17,18 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   if (typeof err === 'object' && err !== null && (err as { name?: string }).name === 'CastError') {
     res.status(400).json({ error: 'invalid_id' })
+    return
+  }
+
+  // A unique index rejected the write, e.g. two identical requests that both passed the
+  // service's "already exists" check at the same moment.
+  if (typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000) {
+    res.status(409).json({ error: 'duplicate' })
+    return
+  }
+
+  if (typeof err === 'object' && err !== null && (err as { name?: string }).name === 'ValidationError') {
+    res.status(400).json({ error: 'validation_error' })
     return
   }
 
