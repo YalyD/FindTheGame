@@ -1,10 +1,5 @@
 import axios from 'axios'
 
-export interface Coords {
-  lat: number
-  lon: number
-}
-
 const BASE_URL = 'https://nominatim.openstreetmap.org'
 const REQUEST_OPTIONS = { headers: { 'Accept-Language': 'he' } }
 
@@ -41,28 +36,6 @@ export async function searchStreets(street: string, city: string): Promise<strin
     .map((r) => r.address?.road)
     .filter((road): road is string => !!road && road.length > 0)
   return [...new Set(streets)]
-}
-
-export async function searchAddresses(query: string): Promise<string[]> {
-  const results = await search(query, 6, false)
-  return results.map((r) => r.display_name)
-}
-
-export async function geocodeToCoords(address: string): Promise<Coords | null> {
-  const results = await search(address, 1, false)
-  const first = results[0]
-  if (!first) return null
-  return { lat: parseFloat(first.lat), lon: parseFloat(first.lon) }
-}
-
-export function haversineDistanceKm(a: Coords, b: Coords): number {
-  const R = 6371
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180
-  const dLon = ((b.lon - a.lon) * Math.PI) / 180
-  const sin2 =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.asin(Math.sqrt(sin2))
 }
 
 export async function reverseGeocode(

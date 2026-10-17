@@ -117,12 +117,6 @@ export const ADDRESS_FIELDS = {
   geoError: 'שגיאה באיתור המיקום',
 } as const
 
-export const ADDRESS_AUTOCOMPLETE = {
-  loading: 'מחפש כתובות...',
-  minChars: 'הקלד לפחות 3 תווים',
-  noResults: 'לא נמצאו תוצאות',
-} as const
-
 export const MAIN = {
   requestRide: 'צור בקשת נסיעה',
   offerRide: 'הצע נסיעה',

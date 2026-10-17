@@ -70,11 +70,13 @@ export function MyActivity({ token, onViewOffers }: Props) {
       prev.map((o) => {
         if (o._id !== offerId) return o
         const passenger = o.pendingPassengers.find((p) => p._id === passengerId)
+        const seatsAvailable = Math.max(0, o.seatsAvailable - (passenger?.seatsNeeded ?? 1))
         const updated: PopulatedOffer = {
           ...o,
           pendingPassengers: o.pendingPassengers.filter((p) => p._id !== passengerId),
           passengers: passenger ? [...o.passengers, passenger] : o.passengers,
-          seatsAvailable: Math.max(0, o.seatsAvailable - 1),
+          seatsAvailable,
+          status: seatsAvailable === 0 ? 'full' : o.status,
         }
         return updated
       }),
