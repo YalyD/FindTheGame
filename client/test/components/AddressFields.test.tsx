@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import axios from 'axios'
 import { AddressFields } from '../../src/components/address/AddressFields'
 
 const reverseGeocode = {
@@ -18,14 +19,11 @@ function setGeolocation(
 
 describe('AddressFields — current location', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({ ok: true, json: async () => reverseGeocode })) as unknown as typeof fetch,
-    )
+    vi.spyOn(axios, 'get').mockResolvedValue({ data: reverseGeocode })
   })
 
   afterEach(() => {
-    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
     // @ts-expect-error - cleaning up the property we defined
     delete navigator.geolocation
   })
@@ -41,7 +39,7 @@ describe('AddressFields — current location', () => {
     await user.click(screen.getByRole('button', { name: /מיקום/ }))
 
     await waitFor(() => expect(onChange).toHaveBeenCalledWith('הרצל 5, תל אביב'))
-    expect(fetch).toHaveBeenCalledWith(
+    expect(axios.get).toHaveBeenCalledWith(
       expect.stringContaining('/reverse?lat=32.07&lon=34.78'),
       expect.anything(),
     )
@@ -50,13 +48,9 @@ describe('AddressFields — current location', () => {
 
   it('rejects a position that resolves outside Israel', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({ address: { road: 'National Rd. D-61', city: 'בואאה', country_code: 'cm' } }),
-      })) as unknown as typeof fetch,
-    )
+    vi.spyOn(axios, 'get').mockResolvedValue({
+      data: { address: { road: 'National Rd. D-61', city: 'בואאה', country_code: 'cm' } },
+    })
     setGeolocation((success) =>
       success({ coords: { latitude: 4.15, longitude: 9.24 } } as GeolocationPosition),
     )

@@ -1,21 +1,16 @@
+import axios from 'axios'
+
 interface Coords {
   lat: string
   lon: string
 }
 
-async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json', 'User-Agent': 'FindTheGame student project' },
-    })
-    if (!res.ok) throw new Error(`${url} responded ${res.status}`)
-    return await res.json()
-  } finally {
-    clearTimeout(timer)
-  }
+export async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
+  const res = await axios.get(url, {
+    timeout: timeoutMs,
+    headers: { Accept: 'application/json', 'User-Agent': 'FindTheGame student project' },
+  })
+  return res.data
 }
 
 export async function geocode(query: string): Promise<Coords | null> {

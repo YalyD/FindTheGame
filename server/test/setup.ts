@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, vi } from 'vitest'
 import mongoose from 'mongoose'
 import { OAuth2Client } from 'google-auth-library'
+import axios from 'axios'
 
 // Globally stub verifyIdToken on the OAuth2Client prototype. Auth tests
 // override the implementation via mockGoogleVerify.mockResolvedValueOnce(...).
@@ -12,10 +13,10 @@ vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation((...args) =
 )
 
 // No real network in tests: the fuel-cost estimate (fueleconomy.gov,
-// Nominatim, OSRM) degrades to null when fetch rejects. Tests that need
-// specific responses override this with mockFetch.mockResolvedValueOnce(...).
-export const mockFetch = vi.fn().mockRejectedValue(new Error('network disabled in tests'))
-vi.stubGlobal('fetch', mockFetch)
+// Nominatim, OSRM) degrades to null when axios.get rejects. Tests that need
+// specific responses override this with mockHttpGet.mockResolvedValueOnce(...).
+export const mockHttpGet = vi.fn().mockRejectedValue(new Error('network disabled in tests'))
+vi.spyOn(axios, 'get').mockImplementation((...args) => mockHttpGet(...args))
 
 // Set env BEFORE any module imports loadEnv().
 // The test database is a separate DB on the dev `mongo` container — never the

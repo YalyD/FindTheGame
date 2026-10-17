@@ -7,17 +7,17 @@ import {
   mpgToLitersPer100km,
   normalizeBrand,
 } from '../src/lib/fuelCost.js'
-import { mockFetch } from './setup.js'
+import { mockHttpGet } from './setup.js'
 
 function jsonResponse(body: unknown) {
-  return { ok: true, json: async () => body }
+  return { data: body }
 }
 
 const CAR = { brand: 'Toyota', model: 'Corolla', year: 2020 }
 
 beforeEach(() => {
-  mockFetch.mockReset()
-  mockFetch.mockRejectedValue(new Error('network disabled in tests'))
+  mockHttpGet.mockReset()
+  mockHttpGet.mockRejectedValue(new Error('network disabled in tests'))
 })
 
 describe('normalizeBrand', () => {
@@ -52,16 +52,16 @@ describe('calcTotalCost', () => {
 
 describe('fetchCarConsumption', () => {
   it('resolves consumption via the two-step fueleconomy.gov lookup', async () => {
-    mockFetch
+    mockHttpGet
       .mockResolvedValueOnce(jsonResponse({ menuItem: [{ text: 'Corolla', value: '41587' }] }))
       .mockResolvedValueOnce(jsonResponse({ comb08: 33 }))
 
     expect(await fetchCarConsumption(CAR)).toBeCloseTo(7.1, 1)
-    expect(mockFetch.mock.calls[0][0]).toContain('make=Toyota')
+    expect(mockHttpGet.mock.calls[0][0]).toContain('make=Toyota')
   })
 
   it('handles a single menu item returned as an object', async () => {
-    mockFetch
+    mockHttpGet
       .mockResolvedValueOnce(jsonResponse({ menuItem: { text: 'Corolla', value: '41587' } }))
       .mockResolvedValueOnce(jsonResponse({ comb08: 47 }))
 
@@ -69,7 +69,7 @@ describe('fetchCarConsumption', () => {
   })
 
   it('returns null when the model is not found', async () => {
-    mockFetch.mockResolvedValueOnce(jsonResponse({}))
+    mockHttpGet.mockResolvedValueOnce(jsonResponse({}))
     expect(await fetchCarConsumption({ brand: 'יונדאי', model: 'i20', year: 2019 })).toBeNull()
   })
 
@@ -78,7 +78,7 @@ describe('fetchCarConsumption', () => {
   })
 
   it('rejects out-of-range values', async () => {
-    mockFetch
+    mockHttpGet
       .mockResolvedValueOnce(jsonResponse({ menuItem: [{ text: 'X', value: '1' }] }))
       .mockResolvedValueOnce(jsonResponse({ comb08: 999 }))
     expect(await fetchCarConsumption(CAR)).toBeNull()
@@ -87,7 +87,7 @@ describe('fetchCarConsumption', () => {
 
 describe('estimateOfferFuelCost', () => {
   function mockHappyPath() {
-    mockFetch.mockImplementation(async (url: string) => {
+    mockHttpGet.mockImplementation(async (url: string) => {
       if (url.includes('fueleconomy.gov/ws/rest/vehicle/menu'))
         return jsonResponse({ menuItem: [{ text: 'Corolla', value: '41587' }] })
       if (url.includes('fueleconomy.gov/ws/rest/vehicle/'))
@@ -112,7 +112,7 @@ describe('estimateOfferFuelCost', () => {
   })
 
   function mockLookupUnavailable() {
-    mockFetch.mockImplementation(async (url: string) => {
+    mockHttpGet.mockImplementation(async (url: string) => {
       if (url.includes('fueleconomy.gov')) throw new Error('unavailable')
       if (url.includes('nominatim')) return jsonResponse([{ lat: '32.05', lon: '34.75' }])
       if (url.includes('router.project-osrm.org'))
@@ -135,7 +135,7 @@ describe('estimateOfferFuelCost', () => {
   })
 
   it('returns null when geocoding finds nothing', async () => {
-    mockFetch.mockImplementation(async (url: string) => {
+    mockHttpGet.mockImplementation(async (url: string) => {
       if (url.includes('nominatim')) return jsonResponse([])
       return jsonResponse({})
     })

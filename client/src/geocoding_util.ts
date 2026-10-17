@@ -1,10 +1,12 @@
+import axios from 'axios'
+
 export interface Coords {
   lat: number
   lon: number
 }
 
 const BASE_URL = 'https://nominatim.openstreetmap.org'
-const FETCH_OPTIONS = { headers: { 'Accept-Language': 'he' } }
+const REQUEST_OPTIONS = { headers: { 'Accept-Language': 'he' } }
 
 async function search(
   query: string,
@@ -12,8 +14,8 @@ async function search(
   addressDetails: boolean,
 ): Promise<NominatimResult[]> {
   const url = `${BASE_URL}/search?q=${encodeURIComponent(query)}&format=json&countrycodes=il&limit=${limit}&addressdetails=${addressDetails ? 1 : 0}`
-  const res = await fetch(url, FETCH_OPTIONS)
-  return res.json()
+  const res = await axios.get<NominatimResult[]>(url, REQUEST_OPTIONS)
+  return res.data
 }
 
 export function cityName(address: NominatimAddress | undefined): string {
@@ -68,8 +70,6 @@ export async function reverseGeocode(
   longitude: number,
 ): Promise<NominatimAddress | undefined> {
   const url = `${BASE_URL}/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
-  const res = await fetch(url, FETCH_OPTIONS)
-  if (!res.ok) throw new Error('reverse geocode failed')
-  const data: NominatimResult = await res.json()
-  return data.address
+  const res = await axios.get<NominatimResult>(url, REQUEST_OPTIONS)
+  return res.data.address
 }

@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import axios from 'axios'
 import mongoose from 'mongoose'
 import { Game } from '../models/Game.js'
 import { RideRequest } from '../models/RideRequest.js'
@@ -74,11 +75,19 @@ type SportEvent = {
 }
 
 async function api<T>(path: string): Promise<T> {
-  const res = await fetch(`https://${HOST}${path}`, {
-    headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': HOST },
-  })
-  if (!res.ok) throw new Error(`SportAPI ${res.status} on ${path}: ${await res.text()}`)
-  return res.json() as Promise<T>
+  try {
+    const res = await axios.get<T>(`https://${HOST}${path}`, {
+      headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': HOST },
+    })
+    return res.data
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response) {
+      throw new Error(
+        `SportAPI ${err.response.status} on ${path}: ${JSON.stringify(err.response.data)}`,
+      )
+    }
+    throw err
+  }
 }
 
 // Uses the league's fixture list rather than one request per day: the free plan

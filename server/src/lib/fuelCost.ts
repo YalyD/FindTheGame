@@ -1,5 +1,5 @@
 import { env } from './env.js'
-import { geocode, drivingDistanceKm } from './routing.js'
+import { fetchJson, geocode, drivingDistanceKm } from './routing.js'
 
 export interface FuelCostEstimate {
   distanceKm: number
@@ -119,21 +119,6 @@ export function calcTotalCost(
 ): number {
   const roundTripLiters = (distanceKm * 2 * litersPer100km) / 100
   return Math.round(roundTripLiters * pricePerLiter)
-}
-
-async function fetchJson(url: string, timeoutMs = 5000): Promise<unknown> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json', 'User-Agent': 'FindTheGame student project' },
-    })
-    if (!res.ok) throw new Error(`${url} responded ${res.status}`)
-    return await res.json()
-  } finally {
-    clearTimeout(timer)
-  }
 }
 
 function firstMenuValue(data: unknown): string | null {
