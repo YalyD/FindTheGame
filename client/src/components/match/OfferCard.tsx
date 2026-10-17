@@ -17,7 +17,7 @@ interface Props {
 export function OfferCard({ offer, isBest, seatsNeeded, onJoin, joining, joined }: Props) {
   const hasEnough = offer.seatsAvailable >= seatsNeeded
   const fuelShare = offer.fuelCost
-    ? Math.round(offer.fuelCost.totalCost / (offer.passengers.length + 2))
+    ? Math.round(offer.fuelCost.totalCost / (offer.seatsTaken + seatsNeeded + 1))
     : null
 
   return (

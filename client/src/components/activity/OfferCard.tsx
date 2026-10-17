@@ -46,7 +46,7 @@ export function OfferCard({
   const [cancelling, setCancelling] = useState(false)
   const [actingOn, setActingOn] = useState<string | null>(null)
   const statusInfo = OFFER_STATUS[offer.status]
-  const totalPeople = offer.passengers.length + 1
+  const totalPeople = offer.passengers.reduce((sum, p) => sum + p.seatsNeeded, 0) + 1
   const hasRiders = offer.passengers.length > 0
   const fuelPerPerson = offer.fuelCost
     ? Math.round(offer.fuelCost.totalCost / totalPeople)

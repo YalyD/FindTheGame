@@ -14,6 +14,7 @@ interface Passenger {
   picture: string
   phone: string
   origin: string
+  seatsNeeded: number
 }
 
 type PendingPassenger = Passenger
@@ -71,6 +72,7 @@ interface RideOffer {
   origin: string
   seatsAvailable: number
   passengers: string[]
+  seatsTaken: number
   requested: boolean
   fuelCost?: FuelCost | null
 }

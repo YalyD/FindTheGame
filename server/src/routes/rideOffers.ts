@@ -79,8 +79,11 @@ rideOffersRouter.get('/mine', requireAuth, async (req: AuthRequest, res: Respons
   async function withOrigin(gameId: unknown, people: Array<Record<string, unknown>>) {
     return Promise.all(
       (people ?? []).map(async (p) => {
-        const request = await RideRequest.findOne({ game: gameId, passenger: p._id }, 'origin')
-        return { ...p, origin: request?.origin ?? '' }
+        const request = await RideRequest.findOne(
+          { game: gameId, passenger: p._id },
+          'origin seatsNeeded',
+        )
+        return { ...p, origin: request?.origin ?? '', seatsNeeded: request?.seatsNeeded ?? 1 }
       }),
     )
   }
@@ -117,8 +120,15 @@ rideOffersRouter.get(
       driver: { $ne: userId },
     }).populate('driver', 'name picture')
 
+    const seatsTakenRows = await RideRequest.aggregate<{ _id: unknown; seats: number }>([
+      { $match: { matchedOffer: { $in: offers.map((o) => o._id) }, status: 'matched' } },
+      { $group: { _id: '$matchedOffer', seats: { $sum: '$seatsNeeded' } } },
+    ])
+    const seatsTaken = new Map(seatsTakenRows.map((row) => [String(row._id), row.seats]))
+
     const serialize = (offer: (typeof offers)[number]) => ({
       ...offer.toJSON(),
+      seatsTaken: seatsTaken.get(String(offer._id)) ?? 0,
       requested:
         offer.pendingPassengers.some((p) => p.toString() === userId) ||
         offer.passengers.some((p) => p.toString() === userId),
