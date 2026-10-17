@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../src/app.js'
 import { RideRequest } from '../src/models/RideRequest.js'
+import { RideOffer } from '../src/models/RideOffer.js'
 import { makeUser, makeGame } from './helpers.js'
 
 const app = createApp()
@@ -109,6 +110,43 @@ describe('GET /api/ride-requests/mine', () => {
     expect(res.status).toBe(200)
     expect(res.body).toHaveLength(1)
     expect(res.body[0].origin).toBe('A1')
+  })
+
+  it('includes the seats taken on the matched offer', async () => {
+    const driver = await makeUser()
+    const me = await makeUser()
+    const other = await makeUser()
+    const game = await makeGame()
+
+    const offer = await RideOffer.create({
+      game: game._id,
+      driver: driver.user._id,
+      origin: 'Driver spot',
+      seatsAvailable: 1,
+      passengers: [me.user._id, other.user._id],
+      fuelCost: { distanceKm: 50, consumption: 6, totalCost: 120 },
+    })
+    await RideRequest.create({
+      game: game._id,
+      passenger: me.user._id,
+      origin: 'Mine',
+      seatsNeeded: 2,
+      status: 'matched',
+      matchedOffer: offer._id,
+    })
+    await RideRequest.create({
+      game: game._id,
+      passenger: other.user._id,
+      origin: 'Other',
+      seatsNeeded: 1,
+      status: 'matched',
+      matchedOffer: offer._id,
+    })
+
+    const res = await request(app).get('/api/ride-requests/mine').set(me.authHeader)
+    expect(res.status).toBe(200)
+    expect(res.body[0].matchedOffer.seatsTaken).toBe(3)
+    expect(res.body[0].matchedOffer.fuelCost.totalCost).toBe(120)
   })
 })
 

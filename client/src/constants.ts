@@ -225,6 +225,7 @@ export const ACTIVITY = {
   myOffersTab: (n: number) => `ההצעות שלי (${n})`,
   fuelTotal: (total: number) => `עלות דלק משוערת (הלוך ושוב): ₪${total}`,
   fuelPerPerson: (amount: number) => `כ-₪${amount} לאדם בחלוקה שווה`,
+  fuelYourShare: (amount: number) => `חלקך בדלק: כ-₪${amount}`,
 } as const
 
 export const NOTIFICATIONS = {

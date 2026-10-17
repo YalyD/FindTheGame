@@ -12,6 +12,7 @@ import { Game } from '../models/Game.js'
 import { sendPushToUser } from '../lib/webpush.js'
 import { estimateOfferFuelCost } from '../lib/fuelCost.js'
 import { geocode, drivingDistanceKm } from '../lib/routing.js'
+import { seatsTakenByOffer } from '../lib/seats.js'
 
 export const rideOffersRouter = Router()
 
@@ -120,11 +121,7 @@ rideOffersRouter.get(
       driver: { $ne: userId },
     }).populate('driver', 'name picture')
 
-    const seatsTakenRows = await RideRequest.aggregate<{ _id: unknown; seats: number }>([
-      { $match: { matchedOffer: { $in: offers.map((o) => o._id) }, status: 'matched' } },
-      { $group: { _id: '$matchedOffer', seats: { $sum: '$seatsNeeded' } } },
-    ])
-    const seatsTaken = new Map(seatsTakenRows.map((row) => [String(row._id), row.seats]))
+    const seatsTaken = await seatsTakenByOffer(offers.map((o) => o._id))
 
     const serialize = (offer: (typeof offers)[number]) => ({
       ...offer.toJSON(),

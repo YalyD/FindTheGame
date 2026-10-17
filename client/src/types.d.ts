@@ -37,6 +37,7 @@ interface MatchedOffer {
   _id: string
   origin: string
   fuelCost?: FuelCost | null
+  seatsTaken: number
   driver: MatchedDriver
 }
 

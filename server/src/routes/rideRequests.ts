@@ -5,6 +5,7 @@ import { validate, objectIdSchema } from '../middleware/validate.js'
 import { writeLimiter } from '../middleware/rateLimits.js'
 import { HttpError } from '../middleware/errorHandler.js'
 import { RideRequest } from '../models/RideRequest.js'
+import { seatsTakenByOffer } from '../lib/seats.js'
 
 export const rideRequestsRouter = Router()
 
@@ -51,7 +52,21 @@ rideRequestsRouter.get('/mine', requireAuth, async (req: AuthRequest, res: Respo
       populate: { path: 'driver', select: 'name picture phone car' },
     })
     .sort({ createdAt: -1 })
-  res.json(requests)
+
+  const offerIds = requests.flatMap((r) => (r.matchedOffer ? [r.matchedOffer._id] : []))
+  const seatsTaken = await seatsTakenByOffer(offerIds)
+
+  res.json(
+    requests.map((r) => {
+      const json = r.toJSON() as Record<string, unknown> & {
+        matchedOffer?: Record<string, unknown> | null
+      }
+      if (json.matchedOffer) {
+        json.matchedOffer.seatsTaken = seatsTaken.get(String(json.matchedOffer._id)) ?? 0
+      }
+      return json
+    }),
+  )
 })
 
 rideRequestsRouter.patch(

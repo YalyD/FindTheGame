@@ -2,6 +2,7 @@ import { Avatar, Box, Button, Card, CardContent, Chip, Divider, Stack, Typograph
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import PhoneIcon from '@mui/icons-material/Phone'
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation'
 import { useState } from 'react'
 import { ACTIVITY, COMMON } from '../../constants'
 import { GameInfo } from '../game/GameInfo'
@@ -16,6 +17,10 @@ interface Props {
 export function RequestCard({ req, onCancel, onViewOffers }: Props) {
   const [cancelling, setCancelling] = useState(false)
   const statusInfo = REQUEST_STATUS[req.status]
+  const fuelCost = req.matchedOffer?.fuelCost
+  const fuelShare = fuelCost
+    ? Math.round((fuelCost.totalCost * req.seatsNeeded) / (req.matchedOffer!.seatsTaken + 1))
+    : null
 
   async function handleCancel() {
     setCancelling(true)
@@ -84,6 +89,14 @@ export function RequestCard({ req, onCancel, onViewOffers }: Props) {
                   <Typography variant="caption" color="text.secondary" sx={{ mt: 0.3, display: 'block' }}>
                     {ACTIVITY.driverPhoneMissing}
                   </Typography>
+                )}
+                {fuelShare !== null && fuelCost && (
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.3 }}>
+                    <LocalGasStationIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary">
+                      {ACTIVITY.fuelYourShare(fuelShare)} · {ACTIVITY.fuelTotal(fuelCost.totalCost)}
+                    </Typography>
+                  </Stack>
                 )}
               </Box>
             </Stack>
