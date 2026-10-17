@@ -14,9 +14,11 @@ vi.mock('../../src/components/address/AddressFields', () => ({
 }))
 
 vi.mock('axios', () => ({
-  default: { post: vi.fn(), isAxiosError: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn(), post: vi.fn(), isAxiosError: vi.fn() },
 }))
 
+const mockedGet = vi.mocked(axios.get)
+const mockedPatch = vi.mocked(axios.patch)
 const mockedPost = vi.mocked(axios.post)
 const mockedIsAxiosError = vi.mocked(axios.isAxiosError)
 
@@ -31,6 +33,10 @@ const game = {
 
 describe('CreateRideRequest', () => {
   beforeEach(() => {
+    mockedGet.mockReset()
+    mockedGet.mockResolvedValue({ data: { phone: '050-1234567', address: '' } })
+    mockedPatch.mockReset()
+    mockedPatch.mockResolvedValue({ data: {} })
     mockedPost.mockReset()
     mockedIsAxiosError.mockReset()
     mockedIsAxiosError.mockReturnValue(false)
@@ -51,10 +57,10 @@ describe('CreateRideRequest', () => {
     const submit = screen.getByRole('button', { name: 'שלח בקשה' })
     expect(submit).toBeDisabled()
 
-    await user.type(screen.getByLabelText('origin'), 'ab')
+    await user.type(await screen.findByLabelText('origin'), 'ab')
     expect(submit).toBeDisabled()
 
-    await user.type(screen.getByLabelText('origin'), 'cd')
+    await user.type(await screen.findByLabelText('origin'), 'cd')
     expect(submit).toBeEnabled()
   })
 
@@ -66,7 +72,7 @@ describe('CreateRideRequest', () => {
       <CreateRideRequest game={game} token="tok" onSuccess={onSuccess} onCancel={vi.fn()} />,
     )
 
-    await user.type(screen.getByLabelText('origin'), 'הרצל 5, חיפה')
+    await user.type(await screen.findByLabelText('origin'), 'הרצל 5, חיפה')
     await user.click(screen.getByRole('button', { name: 'שלח בקשה' }))
 
     await waitFor(() =>
@@ -82,15 +88,15 @@ describe('CreateRideRequest', () => {
   it('surfaces a server-provided error message', async () => {
     const user = userEvent.setup()
     mockedIsAxiosError.mockReturnValue(true)
-    mockedPost.mockRejectedValue({ response: { data: { error: 'already_requested' } } })
+    mockedPost.mockRejectedValue({ response: { data: { error: 'כבר שלחת בקשה למשחק זה' } } })
     render(
       <CreateRideRequest game={game} token="t" onSuccess={vi.fn()} onCancel={vi.fn()} />,
     )
 
-    await user.type(screen.getByLabelText('origin'), 'הרצל 5, חיפה')
+    await user.type(await screen.findByLabelText('origin'), 'הרצל 5, חיפה')
     await user.click(screen.getByRole('button', { name: 'שלח בקשה' }))
 
-    expect(await screen.findByText('already_requested')).toBeInTheDocument()
+    expect(await screen.findByText('כבר שלחת בקשה למשחק זה')).toBeInTheDocument()
   })
 
   it('falls back to a generic error for non-axios failures', async () => {
@@ -100,7 +106,7 @@ describe('CreateRideRequest', () => {
       <CreateRideRequest game={game} token="t" onSuccess={vi.fn()} onCancel={vi.fn()} />,
     )
 
-    await user.type(screen.getByLabelText('origin'), 'הרצל 5, חיפה')
+    await user.type(await screen.findByLabelText('origin'), 'הרצל 5, חיפה')
     await user.click(screen.getByRole('button', { name: 'שלח בקשה' }))
 
     expect(await screen.findByText('שגיאה ביצירת הבקשה, נסה שוב')).toBeInTheDocument()

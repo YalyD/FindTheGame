@@ -14,7 +14,7 @@ describe('GET /api/users/me', () => {
     expect(res.status).toBe(200)
     expect(res.body.name).toBe('Snapshot Test')
     expect(res.body.favoriteTeam).toBe('מכבי תל אביב')
-    expect(res.body.car).toMatchObject({ make: 'Toyota', model: 'Corolla' })
+    expect(res.body.car).toMatchObject({ brand: 'Toyota', model: 'Corolla' })
   })
 
   it('rejects unauthenticated', async () => {
@@ -33,7 +33,7 @@ describe('PATCH /api/users/me', () => {
       .send({
         favoriteTeam: 'הפועל באר שבע',
         address: 'Ben Gurion 10, Beer Sheva',
-        car: { make: 'Mazda', model: '3', year: 2022, seats: 5 },
+        car: { brand: 'Mazda', model: '3', year: 2022, seats: 5 },
       })
 
     expect(res.status).toBe(200)
@@ -48,7 +48,7 @@ describe('PATCH /api/users/me', () => {
 
     const saved = await User.findById(u.user._id)
     expect(saved?.favoriteTeam).toBe('הפועל באר שבע')
-    expect(saved?.car?.make).toBe('Mazda')
+    expect(saved?.car?.brand).toBe('Mazda')
   })
 
   it('rejects out-of-range car year', async () => {
@@ -59,7 +59,7 @@ describe('PATCH /api/users/me', () => {
       .send({
         favoriteTeam: 'מכבי תל אביב',
         address: 'somewhere',
-        car: { make: 'Toyota', model: 'Corolla', year: 1850, seats: 5 },
+        car: { brand: 'Toyota', model: 'Corolla', year: 1850, seats: 5 },
       })
 
     expect(res.status).toBe(400)
@@ -73,7 +73,7 @@ describe('PATCH /api/users/me', () => {
       .send({
         favoriteTeam: 'מכבי תל אביב',
         address: 'somewhere',
-        car: { make: 'Toyota', model: 'Corolla', year: 2020, seats: 99 },
+        car: { brand: 'Toyota', model: 'Corolla', year: 2020, seats: 99 },
       })
     expect(res.status).toBe(400)
   })

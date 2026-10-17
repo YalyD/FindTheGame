@@ -50,7 +50,7 @@ describe('POST /api/auth/google', () => {
       picture: '',
       favoriteTeam: 'מכבי תל אביב',
       address: 'somewhere',
-      car: { make: 'Toyota', model: 'Corolla', year: 2020, seats: 5 },
+      car: { brand: 'Toyota', model: 'Corolla', year: 2020, seats: 5 },
     })
 
     mockVerifyIdToken.mockResolvedValueOnce({

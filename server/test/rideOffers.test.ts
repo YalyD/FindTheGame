@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../src/app.js'
 import { RideOffer } from '../src/models/RideOffer.js'
+import { RideRequest } from '../src/models/RideRequest.js'
 import { makeUser, makeGame } from './helpers.js'
 
 const app = createApp()
@@ -112,6 +113,36 @@ describe('GET /api/ride-offers/game/:gameId', () => {
     expect(res.status).toBe(200)
     expect(res.body).toHaveLength(1)
     expect(res.body[0].origin).toBe('open')
+  })
+
+  it('reports seats taken by matched passengers, not passenger count', async () => {
+    const driver = await makeUser()
+    const rider = await makeUser()
+    const viewer = await makeUser()
+    const game = await makeGame()
+
+    const offer = await RideOffer.create({
+      game: game._id,
+      driver: driver.user._id,
+      origin: 'Driver spot',
+      seatsAvailable: 1,
+      passengers: [rider.user._id],
+    })
+    await RideRequest.create({
+      game: game._id,
+      passenger: rider.user._id,
+      origin: 'Rider spot',
+      seatsNeeded: 3,
+      status: 'matched',
+      matchedOffer: offer._id,
+    })
+
+    const res = await request(app)
+      .get(`/api/ride-offers/game/${game._id}`)
+      .set(viewer.authHeader)
+
+    expect(res.status).toBe(200)
+    expect(res.body[0].seatsTaken).toBe(3)
   })
 })
 

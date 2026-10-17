@@ -19,11 +19,12 @@ export async function makeUser(overrides: Partial<IUser> = {}): Promise<TestUser
     picture: '',
     favoriteTeam: 'מכבי תל אביב',
     address: 'Test St 1, Tel Aviv',
-    car: { make: 'Toyota', model: 'Corolla', year: 2020, seats: 5 },
+    phone: '050-1234567',
+    car: { brand: 'Toyota', model: 'Corolla', year: 2020, seats: 5 },
     ...overrides,
   })
 
-  const profileComplete = Boolean(user.favoriteTeam && user.address && user.car?.make)
+  const profileComplete = Boolean(user.favoriteTeam && user.address && user.car?.brand)
   const token = jwt.sign(
     { userId: user._id.toString(), profileComplete },
     process.env.JWT_SECRET!,

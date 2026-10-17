@@ -27,7 +27,10 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
 
   await user.type(screen.getByLabelText('address'), 'הרצל 5, תל אביב')
   // MUI marks required fields with an asterisk in the label text, so match loosely.
-  await user.type(screen.getByLabelText(/יצרן/), 'טויוטה')
+  await user.type(screen.getByLabelText(/טלפון/), '050-1234567')
+  // The brand is an Autocomplete limited to CAR_BRANDS, so pick it from the list.
+  await user.type(screen.getByRole('combobox', { name: /יצרן/ }), 'טויוטה')
+  await user.click(await screen.findByRole('option', { name: 'טויוטה' }))
   await user.type(screen.getByLabelText(/דגם/), 'קורולה')
   await user.type(screen.getByLabelText(/שנת ייצור/), '2020')
 
@@ -83,7 +86,8 @@ describe('ProfileCompletion', () => {
       {
         favoriteTeam: 'מכבי תל אביב',
         address: 'הרצל 5, תל אביב',
-        car: { make: 'טויוטה', model: 'קורולה', year: 2020, seats: 5 },
+        phone: '050-1234567',
+        car: { brand: 'טויוטה', model: 'קורולה', year: 2020, seats: 5 },
       },
       { headers: { Authorization: 'Bearer old-token' } },
     )
@@ -111,7 +115,7 @@ describe('ProfileCompletion', () => {
         initialProfile={{
           favoriteTeam: 'מכבי חיפה',
           address: 'בן גוריון 1, חיפה',
-          car: { make: 'מאזדה', model: '3', year: 2019, seats: 5 },
+          car: { brand: 'מאזדה', model: '3', year: 2019, seats: 5 },
         }}
       />,
     )

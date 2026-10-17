@@ -32,8 +32,16 @@ async function setupMatchingScenario({
   return { driver, passenger, game, offer, request: req }
 }
 
+async function joinOffer(passenger: TestUser, offerId: string, requestId: string) {
+  const res = await request(app)
+    .post(`/api/ride-offers/${offerId}/join`)
+    .set(passenger.authHeader)
+    .send({ requestId })
+  expect(res.status).toBe(200)
+}
+
 describe('POST /api/ride-offers/:id/join (matching engine)', () => {
-  it('joins an open offer with enough seats, decrements seatsAvailable, marks request matched', async () => {
+  it('adds the passenger to the pending list without taking seats', async () => {
     const { passenger, offer, request: req } = await setupMatchingScenario({
       seatsAvailable: 4,
       seatsNeeded: 2,
@@ -47,38 +55,17 @@ describe('POST /api/ride-offers/:id/join (matching engine)', () => {
     expect(res.status).toBe(200)
 
     const refreshedOffer = await RideOffer.findById(offer._id)
-    expect(refreshedOffer?.seatsAvailable).toBe(2)
-    expect(refreshedOffer?.status).toBe('open')
-    expect(refreshedOffer?.passengers.map(String)).toContain(passenger.user._id.toString())
+    expect(refreshedOffer?.seatsAvailable).toBe(4)
+    expect(refreshedOffer?.pendingPassengers.map(String)).toContain(passenger.user._id.toString())
+    expect(refreshedOffer?.passengers).toHaveLength(0)
 
     const refreshedRequest = await RideRequest.findById(req._id)
-    expect(refreshedRequest?.status).toBe('matched')
-    expect(refreshedRequest?.matchedOffer?.toString()).toBe(offer._id.toString())
+    expect(refreshedRequest?.status).toBe('open')
   })
 
-  it('marks offer "full" when joining consumes all seats', async () => {
-    const { passenger, offer, request: req } = await setupMatchingScenario({
-      seatsAvailable: 2,
-      seatsNeeded: 2,
-    })
-
-    const res = await request(app)
-      .post(`/api/ride-offers/${offer._id}/join`)
-      .set(passenger.authHeader)
-      .send({ requestId: req._id.toString() })
-
-    expect(res.status).toBe(200)
-
-    const refreshedOffer = await RideOffer.findById(offer._id)
-    expect(refreshedOffer?.seatsAvailable).toBe(0)
-    expect(refreshedOffer?.status).toBe('full')
-  })
-
-  it('rejects join when not enough seats available', async () => {
-    const { passenger, offer, request: req } = await setupMatchingScenario({
-      seatsAvailable: 1,
-      seatsNeeded: 3,
-    })
+  it('rejects a second join request to the same offer', async () => {
+    const { passenger, offer, request: req } = await setupMatchingScenario()
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
 
     const res = await request(app)
       .post(`/api/ride-offers/${offer._id}/join`)
@@ -86,12 +73,25 @@ describe('POST /api/ride-offers/:id/join (matching engine)', () => {
       .send({ requestId: req._id.toString() })
 
     expect(res.status).toBe(409)
-    expect(res.body.error).toMatch(/מספיק מושבים/)
+  })
 
-    const refreshedOffer = await RideOffer.findById(offer._id)
-    expect(refreshedOffer?.seatsAvailable).toBe(1) // unchanged
-    const refreshedRequest = await RideRequest.findById(req._id)
-    expect(refreshedRequest?.status).toBe('open') // unchanged
+  it('requires the passenger to have a phone number', async () => {
+    const { offer, game } = await setupMatchingScenario()
+    const noPhone = await makeUser({ phone: undefined })
+    const req = await RideRequest.create({
+      game: game._id,
+      passenger: noPhone.user._id,
+      origin: 'somewhere',
+      seatsNeeded: 1,
+    })
+
+    const res = await request(app)
+      .post(`/api/ride-offers/${offer._id}/join`)
+      .set(noPhone.authHeader)
+      .send({ requestId: req._id.toString() })
+
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(/טלפון/)
   })
 
   it('rejects join when the offer belongs to a different game than the request', async () => {
@@ -210,5 +210,85 @@ describe('POST /api/ride-offers/:id/join (matching engine)', () => {
       .send({ requestId: req._id.toString() })
 
     expect(res.status).toBe(401)
+  })
+})
+
+describe('POST /api/ride-offers/:id/accept-passenger', () => {
+  async function acceptPassenger(driver: TestUser, offerId: string, passengerId: string) {
+    return request(app)
+      .post(`/api/ride-offers/${offerId}/accept-passenger`)
+      .set(driver.authHeader)
+      .send({ passengerId })
+  }
+
+  it('takes the seats and marks the request matched', async () => {
+    const { driver, passenger, offer, request: req } = await setupMatchingScenario({
+      seatsAvailable: 4,
+      seatsNeeded: 2,
+    })
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
+
+    const res = await acceptPassenger(driver, offer._id.toString(), passenger.user._id.toString())
+    expect(res.status).toBe(200)
+
+    const refreshedOffer = await RideOffer.findById(offer._id)
+    expect(refreshedOffer?.seatsAvailable).toBe(2)
+    expect(refreshedOffer?.status).toBe('open')
+    expect(refreshedOffer?.passengers.map(String)).toContain(passenger.user._id.toString())
+    expect(refreshedOffer?.pendingPassengers).toHaveLength(0)
+
+    const refreshedRequest = await RideRequest.findById(req._id)
+    expect(refreshedRequest?.status).toBe('matched')
+    expect(refreshedRequest?.matchedOffer?.toString()).toBe(offer._id.toString())
+  })
+
+  it('marks the offer "full" when accepting takes all seats', async () => {
+    const { driver, passenger, offer, request: req } = await setupMatchingScenario({
+      seatsAvailable: 2,
+      seatsNeeded: 2,
+    })
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
+
+    const res = await acceptPassenger(driver, offer._id.toString(), passenger.user._id.toString())
+    expect(res.status).toBe(200)
+
+    const refreshedOffer = await RideOffer.findById(offer._id)
+    expect(refreshedOffer?.seatsAvailable).toBe(0)
+    expect(refreshedOffer?.status).toBe('full')
+  })
+
+  it('rejects accepting when not enough seats are available', async () => {
+    const { driver, passenger, offer, request: req } = await setupMatchingScenario({
+      seatsAvailable: 1,
+      seatsNeeded: 3,
+    })
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
+
+    const res = await acceptPassenger(driver, offer._id.toString(), passenger.user._id.toString())
+    expect(res.status).toBe(409)
+    expect(res.body.error).toMatch(/מספיק מושבים/)
+
+    const refreshedOffer = await RideOffer.findById(offer._id)
+    expect(refreshedOffer?.seatsAvailable).toBe(1)
+    const refreshedRequest = await RideRequest.findById(req._id)
+    expect(refreshedRequest?.status).toBe('open')
+  })
+
+  it('only lets the driver accept', async () => {
+    const { passenger, offer, request: req } = await setupMatchingScenario()
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
+
+    const res = await acceptPassenger(passenger, offer._id.toString(), passenger.user._id.toString())
+    expect(res.status).toBe(404)
+  })
+
+  it('notifies the passenger when accepted', async () => {
+    const { driver, passenger, offer, request: req } = await setupMatchingScenario()
+    await joinOffer(passenger, offer._id.toString(), req._id.toString())
+    await acceptPassenger(driver, offer._id.toString(), passenger.user._id.toString())
+
+    const notifications = await Notification.find({ recipient: passenger.user._id })
+    expect(notifications).toHaveLength(1)
+    expect(notifications[0].message).toContain(driver.user.name)
   })
 })

@@ -5,7 +5,7 @@ import {
   estimateOfferFuelCost,
   fetchCarConsumption,
   mpgToLitersPer100km,
-  normalizeMake,
+  normalizeBrand,
 } from '../src/lib/fuelCost.js'
 import { mockFetch } from './setup.js'
 
@@ -13,22 +13,22 @@ function jsonResponse(body: unknown) {
   return { ok: true, json: async () => body }
 }
 
-const CAR = { make: 'Toyota', model: 'Corolla', year: 2020 }
+const CAR = { brand: 'Toyota', model: 'Corolla', year: 2020 }
 
 beforeEach(() => {
   mockFetch.mockReset()
   mockFetch.mockRejectedValue(new Error('network disabled in tests'))
 })
 
-describe('normalizeMake', () => {
-  it('maps Hebrew makes to English', () => {
-    expect(normalizeMake('טויוטה')).toBe('Toyota')
-    expect(normalizeMake(' מאזדה ')).toBe('Mazda')
+describe('normalizeBrand', () => {
+  it('maps Hebrew brands to English', () => {
+    expect(normalizeBrand('טויוטה')).toBe('Toyota')
+    expect(normalizeBrand(' מאזדה ')).toBe('Mazda')
   })
 
-  it('passes through unknown / English makes unchanged', () => {
-    expect(normalizeMake('Toyota')).toBe('Toyota')
-    expect(normalizeMake('דה לוריאן')).toBe('דה לוריאן')
+  it('passes through unknown / English brands unchanged', () => {
+    expect(normalizeBrand('Toyota')).toBe('Toyota')
+    expect(normalizeBrand('דה לוריאן')).toBe('דה לוריאן')
   })
 })
 
@@ -70,7 +70,7 @@ describe('fetchCarConsumption', () => {
 
   it('returns null when the model is not found', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({}))
-    expect(await fetchCarConsumption({ make: 'יונדאי', model: 'i20', year: 2019 })).toBeNull()
+    expect(await fetchCarConsumption({ brand: 'יונדאי', model: 'i20', year: 2019 })).toBeNull()
   })
 
   it('returns null on network failure', async () => {
@@ -111,7 +111,7 @@ describe('estimateOfferFuelCost', () => {
     expect(estimate!.totalCost).toBe(104)
   })
 
-  it('falls back to the default consumption when the car is unknown', async () => {
+  function mockLookupUnavailable() {
     mockFetch.mockImplementation(async (url: string) => {
       if (url.includes('fueleconomy.gov')) throw new Error('unavailable')
       if (url.includes('nominatim')) return jsonResponse([{ lat: '32.05', lon: '34.75' }])
@@ -119,8 +119,18 @@ describe('estimateOfferFuelCost', () => {
         return jsonResponse({ code: 'Ok', routes: [{ distance: 50_000 }] })
       throw new Error(`unexpected url ${url}`)
     })
+  }
 
+  it("falls back to the brand's typical consumption when the lookup fails", async () => {
+    mockLookupUnavailable()
     const estimate = await estimateOfferFuelCost(CAR, 'origin', 'stadium', 'city')
+    expect(estimate!.consumption).toBe(6.0)
+  })
+
+  it('falls back to the default consumption when the brand is unknown', async () => {
+    mockLookupUnavailable()
+    const car = { brand: 'דה לוריאן', model: 'DMC-12', year: 1981 }
+    const estimate = await estimateOfferFuelCost(car, 'origin', 'stadium', 'city')
     expect(estimate!.consumption).toBe(DEFAULT_CONSUMPTION)
   })
 
