@@ -31,6 +31,10 @@ export function findByDriverWithDetails(driverId: string) {
     .sort({ createdAt: -1 })
 }
 
+export async function existsForGame(gameId: unknown): Promise<boolean> {
+  return (await RideOffer.exists({ game: gameId })) !== null
+}
+
 export function findOpenForGame(gameId: string, excludeDriverId: string) {
   return RideOffer.find({
     game: gameId,

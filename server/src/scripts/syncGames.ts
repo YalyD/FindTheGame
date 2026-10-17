@@ -1,9 +1,8 @@
 import 'dotenv/config'
 import axios from 'axios'
 import mongoose from 'mongoose'
-import { Game } from '../models/Game.js'
-import { RideRequest } from '../models/RideRequest.js'
-import { RideOffer } from '../models/RideOffer.js'
+import { GameData } from '../repositories/gameRepository.js'
+import { applySyncedGames } from '../services/gameSyncService.js'
 
 const KEY = process.env.RAPIDAPI_KEY!
 const HOST = 'sportapi7.p.rapidapi.com'
@@ -66,8 +65,10 @@ function getVenue(homeTeam: string) {
 
 // SportAPI's unique-tournament id for the Israeli Premier League
 const LEAGUE_ID = 266
+const DAYS_AHEAD = 30
 
 type SportEvent = {
+  id: number
   homeTeam: { name: string }
   awayTeam: { name: string }
   startTimestamp: number
@@ -92,9 +93,7 @@ async function api<T>(path: string): Promise<T> {
 
 // Uses the league's fixture list rather than one request per day: the free plan
 // only allows 50 requests, and the old per-date endpoint was removed.
-async function fetchIsraeliGames(daysAhead = 30) {
-  const cutoff = Date.now() + daysAhead * 24 * 60 * 60 * 1000
-
+async function fetchIsraeliGames(cutoff: number): Promise<GameData[]> {
   const { seasons } = await api<{ seasons: { id: number }[] }>(
     `/api/v1/unique-tournament/${LEAGUE_ID}/seasons`,
   )
@@ -117,6 +116,7 @@ async function fetchIsraeliGames(daysAhead = 30) {
       const awayTeam = translate(e.awayTeam.name, TEAM_MAP)
       const venue = getVenue(homeTeam)
       return {
+        externalId: e.id,
         homeTeam,
         awayTeam,
         date: new Date(e.startTimestamp * 1000),
@@ -126,12 +126,10 @@ async function fetchIsraeliGames(daysAhead = 30) {
       }
     })
 
-  // Dedupe: same teams + same date
-  const seen = new Set<string>()
+  const seen = new Set<number>()
   return games.filter((g) => {
-    const k = `${g.homeTeam}|${g.awayTeam}|${g.date.toISOString()}`
-    if (seen.has(k)) return false
-    seen.add(k)
+    if (seen.has(g.externalId)) return false
+    seen.add(g.externalId)
     return true
   })
 }
@@ -141,23 +139,27 @@ async function run() {
   if (!uri) throw new Error('MONGODB_URI is not set')
   await mongoose.connect(uri)
 
+  const from = new Date()
+  const to = new Date(from.getTime() + DAYS_AHEAD * 24 * 60 * 60 * 1000)
+
   console.log('Fetching Israeli games from SportAPI...')
-  const games = await fetchIsraeliGames(30)
+  const games = await fetchIsraeliGames(to.getTime())
   console.log(`Found ${games.length} games (after dedupe)`)
 
-  // Replacing with nothing would wipe every game and cascade-delete all rides
   if (games.length === 0) {
     throw new Error('No games returned from SportAPI — leaving existing games untouched')
   }
 
-  await Game.deleteMany({})
-  await Game.insertMany(games)
-  console.log(`Seeded ${games.length} games into MongoDB`)
-
-  const validIds = (await Game.find({}, '_id').lean()).map((g) => g._id)
-  const r = await RideRequest.deleteMany({ game: { $nin: validIds } })
-  const o = await RideOffer.deleteMany({ game: { $nin: validIds } })
-  console.log(`Cleaned ${r.deletedCount} orphan requests, ${o.deletedCount} orphan offers`)
+  const result = await applySyncedGames(games, { from, to })
+  console.log(
+    `Created ${result.created}, updated ${result.updated}, removed ${result.removed} stale games`,
+  )
+  if (result.keptWithRides.length > 0) {
+    console.warn(
+      `Kept ${result.keptWithRides.length} games no longer listed by SportAPI because they have rides: ` +
+        result.keptWithRides.join(', '),
+    )
+  }
 
   await mongoose.disconnect()
 }

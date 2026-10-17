@@ -120,8 +120,19 @@ server container:
 docker compose -f docker-compose.dev.yml exec server npx tsx src/scripts/seedGames.ts
 ```
 
-(`seedKnownGames.ts` and `syncGames.ts` are also available; `syncGames` pulls
-real fixtures and needs `RAPIDAPI_KEY`.)
+(`seedKnownGames.ts` and `syncGames.ts` are also available.)
+
+- `seedGames.ts` / `seedKnownGames.ts` **replace** all games and delete every
+  ride. Use them only to start from scratch.
+- `syncGames.ts` pulls real fixtures for the next 30 days and needs
+  `RAPIDAPI_KEY`. It is safe to run on a live database: games are matched by
+  SportAPI event id and updated in place, so existing rides are kept. It only
+  removes upcoming games that SportAPI no longer lists **and** that have no
+  rides.
+
+```bash
+docker compose -f docker-compose.dev.yml exec server npx tsx src/scripts/syncGames.ts
+```
 
 ## Running in production
 

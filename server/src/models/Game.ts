@@ -7,9 +7,11 @@ export interface IGame extends Document {
   stadium: string
   city: string
   competition: string
+  externalId?: number
 }
 
 const gameSchema = new Schema<IGame>({
+  externalId: { type: Number, unique: true, sparse: true },
   homeTeam: { type: String, required: true },
   awayTeam: { type: String, required: true },
   date: { type: Date, required: true },

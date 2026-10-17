@@ -44,6 +44,10 @@ export function findByPassengerWithDetails(passengerId: string) {
     .sort({ createdAt: -1 })
 }
 
+export async function existsForGame(gameId: unknown): Promise<boolean> {
+  return (await RideRequest.exists({ game: gameId })) !== null
+}
+
 export async function seatsTakenByOffer(offerIds: unknown[]): Promise<Map<string, number>> {
   const rows = await RideRequest.aggregate<{ _id: unknown; seats: number }>([
     { $match: { matchedOffer: { $in: offerIds }, status: 'matched' } },
